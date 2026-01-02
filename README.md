@@ -30,6 +30,5 @@ componentize-go --world my-world --wit-path ./my_app/wit componentize --mod ./my
 
 ### Run
 ```sh
-git clone --depth 1 https://github.com/asteurer/componentize-go
-cargo install --path ./componentize-go
+cargo install --git https://github.com/asteurer/componentize-go
 ```
