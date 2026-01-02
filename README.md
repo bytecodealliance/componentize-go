@@ -4,25 +4,13 @@
 > This is a work-in-progress.
 
 
-This is a tool to convert a Go application to a [WebAssembly
-component](https://github.com/WebAssembly/component-model).  It takes the
-following as input:
+This is a tool to convert a Go application to a [WebAssembly component](https://github.com/WebAssembly/component-model). It takes the following as input:
 
 - a [WIT](https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md) file or directory
 - the name of a [WIT world](https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md#wit-worlds) defined in the above file or directory
 - the directory containing a Go module which targets said world
 
-The output is a component which may be run using
-e.g. [`wasmtime`](https://github.com/bytecodealliance/wasmtime).
-
-## Usage
-### Prerequisites
-- [**Go**](https://go.dev) - 1.25+
-
-### Example usage
-```sh
-componentize-go --world my-world --wit-path ./my_app/wit componentize --mod ./my_app --output ./my_app/main.wasm
-```
+The output is a component which may be run using e.g. [`wasmtime`](https://github.com/bytecodealliance/wasmtime).
 
 ## Installation
 ### Prerequisites
