@@ -5,10 +5,10 @@ $(GO)/bin/go:
 	tar xf $(GO).tbz
 
 generate-bindings:
-	wit-bindgen go --world bindings --out-dir . wit
+	componentize-go --world wasip3-example bindings
 
 build-component: generate-bindings $(GO)/bin/go
-	componentize-go --world bindings componentize --go $(GO)/bin/go
+	componentize-go --world wasip3-example componentize --go $(GO)/bin/go
 
 .PHONY: run
 run: build-component

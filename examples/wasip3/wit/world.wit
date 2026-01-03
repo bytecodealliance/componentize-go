@@ -1,6 +1,6 @@
 // We actually don't use this; it's just to let bindgen! find the corresponding world in wit/deps.
 package wasmtime:wasi-http;
 
-world bindings {
+world wasip3-example {
   include wasi:http/proxy@0.3.0-rc-2025-09-16;
 }

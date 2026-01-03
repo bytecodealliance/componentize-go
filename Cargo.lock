@@ -134,6 +134,7 @@ dependencies = [
  "regex",
  "url",
  "wat",
+ "wit-bindgen-go",
  "wit-component",
  "wit-parser",
 ]
@@ -631,6 +632,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ae137229bcbd6cdf0f7b80a31df61766145077ddf49416a728b02cb3921ff3fc"
 dependencies = [
  "windows-link",
+]
+
+[[package]]
+name = "wit-bindgen-core"
+version = "0.50.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6ee98d5747ec63897e51101c8cafad569cc639346332c0378772ef4baeea8ed2"
+dependencies = [
+ "anyhow",
+ "heck",
+ "wit-parser",
+]
+
+[[package]]
+name = "wit-bindgen-go"
+version = "0.50.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "503a0451aa4f7a0dcaf3da1b464aa8bc07a3456bc49d8f2a329a3710e2f0699a"
+dependencies = [
+ "anyhow",
+ "heck",
+ "wasm-encoder",
+ "wasm-metadata",
+ "wit-bindgen-core",
+ "wit-component",
 ]
 
 [[package]]

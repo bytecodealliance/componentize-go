@@ -4,7 +4,6 @@
 - [**componentize-go**](https://github.com/asteurer/componentize-go) - Latest version
 - [**go**](https://go.dev/dl/) - v1.25+
 - [**wasmtime**](https://github.com/bytecodealliance/wasmtime)  - Latest version
-- [**wit-bindgen**](https://github.com/bytecodealliance/wit-bindgen) - Latest version
 
 ### Run
 ```sh

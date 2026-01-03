@@ -13,5 +13,6 @@ clap = { version = "4.5.53", features = ["derive"] }
 regex = "1.12.2"
 url = "2.5.7"
 wat = { version = "1.243.0"}
+wit-bindgen-go = "0.50.0"
 wit-component = "0.243.0"
 wit-parser = "0.243.0"

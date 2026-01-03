@@ -1,8 +1,8 @@
 generate-bindings:
-	wit-bindgen go --world bindings --out-dir . wit
+	componentize-go --world wasip2-example bindings
 
 build-component: generate-bindings
-	componentize-go --world bindings componentize
+	componentize-go --world wasip2-example componentize
 
 .PHONY: run
 run: build-component

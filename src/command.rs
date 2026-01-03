@@ -1,4 +1,4 @@
-use crate::componentize;
+use crate::{bindings::generate_bindings, componentize};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::{ffi::OsString, path::PathBuf};
@@ -48,6 +48,9 @@ pub struct Common {
 pub enum Command {
     /// Build a Go WebAssembly component.
     Componentize(Componentize),
+
+    /// Generate Go bindings for the world.
+    Bindings(Bindings),
 }
 
 #[derive(Parser)]
@@ -69,7 +72,17 @@ pub fn run<T: Into<OsString> + Clone, I: IntoIterator<Item = T>>(args: I) -> Res
     let options = Options::parse_from(args);
     match options.command {
         Command::Componentize(opts) => componentize(options.common, opts),
+        Command::Bindings(opts) => bindings(options.common, opts),
     }
+}
+
+#[derive(Parser)]
+pub struct Bindings {
+    /// Output directory for bindings (or current directory if `None`).
+    ///
+    /// This will be created if it does not already exist.
+    #[arg(long, short = 'o')]
+    pub output: Option<PathBuf>,
 }
 
 fn componentize(common: Common, componentize: Componentize) -> Result<()> {
@@ -92,4 +105,14 @@ fn componentize(common: Common, componentize: Componentize) -> Result<()> {
     // Step 3: Update the core module to use the component model ABI.
     componentize::core_module_to_component(&core_module)?;
     Ok(())
+}
+
+fn bindings(common: Common, bindings: Bindings) -> Result<()> {
+    generate_bindings(
+        common.wit_path.as_ref(),
+        common.world.as_deref(),
+        &common.features,
+        common.all_features,
+        bindings.output.as_deref(),
+    )
 }
