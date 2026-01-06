@@ -5,7 +5,7 @@ $(GO)/bin/go:
 	tar xf $(GO).tbz
 
 generate-bindings:
-	componentize-go --world wasip3-example bindings
+	componentize-go --world wasip3-example bindings --format
 
 build-component: generate-bindings $(GO)/bin/go
 	componentize-go --world wasip3-example componentize --go $(GO)/bin/go

@@ -1,5 +1,5 @@
 generate-bindings:
-	componentize-go --world wasip2-example bindings
+	componentize-go --world wasip2-example bindings --format
 
 build-component: generate-bindings
 	componentize-go --world wasip2-example componentize

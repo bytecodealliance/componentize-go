@@ -89,6 +89,10 @@ pub struct Bindings {
     /// A stub function is a placeholder method which has not yet been implemented.
     #[arg(long)]
     pub generate_stubs: bool,
+
+    #[arg(long)]
+    /// Whether or not `gofmt` should be used (if present) to format generated code.
+    pub format: bool,
 }
 
 fn componentize(common: Common, componentize: Componentize) -> Result<()> {
@@ -120,6 +124,7 @@ fn bindings(common: Common, bindings: Bindings) -> Result<()> {
         &common.features,
         common.all_features,
         bindings.generate_stubs,
+        bindings.format,
         bindings.output.as_deref(),
     )
 }

@@ -8,13 +8,21 @@ pub fn generate_bindings(
     features: &[String],
     all_features: bool,
     generate_stubs: bool,
+    should_format: bool,
     output: Option<&Path>,
 ) -> Result<()> {
     let (resolve, world) = parse_wit(wit_path, world, features, all_features)?;
     let mut files = Default::default();
 
+    let format = if should_format {
+        wit_bindgen_go::Format::True
+    } else {
+        wit_bindgen_go::Format::False
+    };
+
     wit_bindgen_go::Opts {
         generate_stubs,
+        format,
         ..Default::default()
     }
     .build()
