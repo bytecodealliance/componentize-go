@@ -158,8 +158,8 @@ mod tests {
                 .args(["--mod", self.path])
                 .args(["-o", self.wasm_path.to_str().unwrap()]);
 
-            if let Some(path) = go.as_ref() {
-                build_cmd.args(["--go", path.to_str().unwrap()]);
+            if let Some(go_path) = go.as_ref() {
+                build_cmd.args(["--go", go_path.to_str().unwrap()]);
             }
 
             let build_output = build_cmd.output().expect(&format!(
