@@ -1,9 +1,4 @@
 # componentize-go
-
-> [!Caution]
-> This is a work-in-progress.
-
-
 This is a tool to convert a Go application to a [WebAssembly component](https://github.com/WebAssembly/component-model). It takes the following as input:
 
 - a [WIT](https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md) file or directory
