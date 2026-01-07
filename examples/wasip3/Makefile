@@ -1,4 +1,4 @@
-GO := go-$(shell uname -s | tr 'A-Z' 'a-z')-$(shell uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/amd64/')-bootstrap
+GO := ../../go-$(shell uname -s | tr 'A-Z' 'a-z')-$(shell uname -m | sed -e 's/aarch64/arm64/' -e 's/x86_64/amd64/')-bootstrap
 
 $(GO)/bin/go:
 	curl -OL https://github.com/dicej/go/releases/download/go1.25.5-wasi-on-idle/$(GO).tbz

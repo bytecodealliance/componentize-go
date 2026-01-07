@@ -1,1 +1,12 @@
 target
+go.mod
+*.wasm
+wasi_*
+wit_*
+.crates.toml
+.crates2.json
+go-*-bootstrap*
+# examples/wasip2 stub
+export_wasi_http_handler/wit_bindings.go
+# examples/wasip3 stub
+export_wasi_http_incoming_handler/wit_bindings.go

@@ -1,7 +1,0 @@
-go.mod
-*.wasm
-wasi_*
-export_wasi_http_incoming_handler/wit_bindings.go
-wit_*
-.crates.toml
-.crates2.json

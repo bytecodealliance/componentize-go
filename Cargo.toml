@@ -1,14 +1,40 @@
 [package]
 name = "componentize-go"
-version = "0.1.0"
-edition = "2024"
+authors = ["Andrew Steurer <me@asteurer.com>"]
+version = { workspace = true }
+edition = { workspace = true }
 
 [lib]
 name = "componentize_go"
 crate-type = ["cdylib", "rlib"]
 
-[dependencies]
+[workspace]
+members = ["./tests"]
+
+[workspace.dependencies]
 anyhow = "1.0.100"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+
+[workspace.lints.clippy]
+# The default set of lints in Clippy is viewed as "too noisy" right now so
+# they're all turned off by default. Selective lints are then enabled below as
+# necessary.
+all = { level = 'allow', priority = -1 }
+clone_on_copy = 'warn'
+map_clone = 'warn'
+unnecessary_to_owned = 'warn'
+manual_strip = 'warn'
+uninlined_format_args = 'warn'
+unnecessary_mut_passed = 'warn'
+unnecessary_fallible_conversions = 'warn'
+unnecessary_cast = 'warn'
+allow_attributes_without_reason = 'warn'
+
+[dependencies]
+anyhow = { workspace = true}
 clap = { version = "4.5.53", features = ["derive"] }
 regex = "1.12.2"
 wat = { version = "1.243.0"}
