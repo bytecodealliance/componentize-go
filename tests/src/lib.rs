@@ -31,7 +31,7 @@ mod tests {
     });
 
     // TODO: Once the patch is merged in Big Go, this needs to be removed.
-    static PATCHED_GO_PATH: once_cell::sync::Lazy<PathBuf> = Lazy::new(|| {
+    async fn patched_go_path() -> PathBuf {
         let test_manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         let root_manifest = test_manifest.parent().unwrap();
 
@@ -67,12 +67,13 @@ mod tests {
         );
 
         println!("Downloading patched Go from {download_url}");
-        let response =
-            reqwest::blocking::get(&download_url).expect("Failed to download patched Go");
+        let response = reqwest::get(&download_url)
+            .await
+            .expect("Failed to download patched Go");
 
         std::fs::write(
             &archive_path,
-            response.bytes().expect("Failed to read download"),
+            response.bytes().await.expect("Failed to read download"),
         )
         .expect("Failed to write archive");
 
@@ -89,7 +90,7 @@ mod tests {
         std::fs::remove_file(&archive_path).ok();
 
         go_bin
-    });
+    }
 
     struct App<'a> {
         path: &'a str,
@@ -218,7 +219,7 @@ mod tests {
     #[tokio::test]
     async fn example_wasip3() {
         let mut app = App::new("../examples/wasip3", "wasip3-example");
-        app.build(Some(PATCHED_GO_PATH.to_path_buf()))
+        app.build(Some(patched_go_path().await))
             .expect("failed to build app");
         app.run("/hello", "Hello, world!")
             .await
