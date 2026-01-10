@@ -36,4 +36,4 @@ jobs:
           go-version: 'stable'
       - uses: bytecodealliance/actions/wasmtime/setup@v1
       - run: rustup update stable --no-self-update && rustup default stable
-      - run: cargo test --manifest-path tests/Cargo.toml
+      - run: cargo test --workspace
