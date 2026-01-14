@@ -68,14 +68,6 @@ pub struct Componentize {
     pub mod_path: Option<PathBuf>,
 }
 
-pub fn run<T: Into<OsString> + Clone, I: IntoIterator<Item = T>>(args: I) -> Result<()> {
-    let options = Options::parse_from(args);
-    match options.command {
-        Command::Componentize(opts) => componentize(options.common, opts),
-        Command::Bindings(opts) => bindings(options.common, opts),
-    }
-}
-
 #[derive(Parser)]
 pub struct Bindings {
     /// Output directory for bindings (or current directory if `None`).
@@ -88,9 +80,23 @@ pub struct Bindings {
     #[arg(long)]
     pub generate_stubs: bool,
 
-    #[arg(long)]
     /// Whether or not `gofmt` should be used (if present) to format generated code.
+    #[arg(long)]
     pub format: bool,
+
+    /// The name of the Go module housing the generated bindings (or "wit_component" if `None`).
+    ///
+    /// This option is used if the generated bindings will be used as a library.
+    #[arg(long)]
+    pub mod_name: Option<String>,
+}
+
+pub fn run<T: Into<OsString> + Clone, I: IntoIterator<Item = T>>(args: I) -> Result<()> {
+    let options = Options::parse_from(args);
+    match options.command {
+        Command::Componentize(opts) => componentize(options.common, opts),
+        Command::Bindings(opts) => bindings(options.common, opts),
+    }
 }
 
 fn componentize(common: Common, componentize: Componentize) -> Result<()> {
@@ -124,5 +130,6 @@ fn bindings(common: Common, bindings: Bindings) -> Result<()> {
         bindings.generate_stubs,
         bindings.format,
         bindings.output.as_deref(),
+        bindings.mod_name,
     )
 }

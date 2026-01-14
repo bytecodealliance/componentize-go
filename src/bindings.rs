@@ -2,6 +2,7 @@ use crate::common::{make_path_absolute, parse_wit};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
+#[allow(clippy::too_many_arguments)]
 pub fn generate_bindings(
     wit_path: &[impl AsRef<Path>],
     world: Option<&str>,
@@ -10,6 +11,7 @@ pub fn generate_bindings(
     generate_stubs: bool,
     should_format: bool,
     output: Option<&Path>,
+    mod_name: Option<String>,
 ) -> Result<()> {
     let (resolve, world) = parse_wit(wit_path, world, features, all_features)?;
     let mut files = Default::default();
@@ -23,6 +25,7 @@ pub fn generate_bindings(
     wit_bindgen_go::Opts {
         generate_stubs,
         format,
+        mod_name,
         ..Default::default()
     }
     .build()
