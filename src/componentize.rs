@@ -1,4 +1,4 @@
-use crate::common::parse_wit;
+use crate::common::{make_path_absolute, parse_wit};
 use anyhow::{Context, Result, anyhow};
 use std::{path::PathBuf, process::Command};
 
@@ -91,26 +91,14 @@ pub fn build_wasm_core_module(
     go_path: Option<PathBuf>,
 ) -> Result<PathBuf> {
     let go = match &go_path {
-        Some(p) => {
-            if p.is_relative() {
-                std::env::current_dir()?.join(p)
-            } else {
-                p.to_path_buf()
-            }
-        }
+        Some(p) => make_path_absolute(p)?,
         None => PathBuf::from("go"),
     };
 
     check_go_version(&go)?;
 
     let out_path_buf = match &out {
-        Some(p) => {
-            if p.is_relative() {
-                std::env::current_dir()?.join(p)
-            } else {
-                p.to_path_buf()
-            }
-        }
+        Some(p) => make_path_absolute(p)?,
         None => std::env::current_dir()?.join("main.wasm"),
     };
 
@@ -121,9 +109,8 @@ pub fn build_wasm_core_module(
     }
 
     let out_path = out_path_buf
-        .into_os_string()
-        .into_string()
-        .map_err(|_| anyhow!("Output path is not valid unicode"))?;
+        .to_str()
+        .ok_or_else(|| anyhow!("Output path is not valid unicode"))?;
 
     let module_path = match &go_module {
         Some(p) => {
@@ -144,7 +131,7 @@ pub fn build_wasm_core_module(
             "-buildmode=c-shared",
             "-ldflags=-checklinkname=0",
             "-o",
-            &out_path,
+            out_path,
         ])
         .env("GOOS", "wasip1")
         .env("GOARCH", "wasm")

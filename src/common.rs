@@ -1,5 +1,5 @@
 use anyhow::Result;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use wit_parser::{PackageId, Resolve, WorldId};
 
 pub fn parse_wit(
@@ -38,4 +38,13 @@ pub fn parse_wit(
 
     let world = resolve.select_world(&main_packages, world)?;
     Ok((resolve, world))
+}
+
+// Converts a relative path to an absolute path.
+pub fn make_path_absolute(p: &PathBuf) -> Result<PathBuf> {
+    if p.is_relative() {
+        Ok(std::env::current_dir()?.join(p))
+    } else {
+        Ok(p.to_owned())
+    }
 }

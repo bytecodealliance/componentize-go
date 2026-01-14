@@ -1,4 +1,4 @@
-use crate::common::parse_wit;
+use crate::common::{make_path_absolute, parse_wit};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
@@ -29,13 +29,7 @@ pub fn generate_bindings(
     .generate(&resolve, world, &mut files)?;
 
     let output_path = match output {
-        Some(p) => {
-            if p.is_relative() {
-                std::env::current_dir()?.join(p)
-            } else {
-                p.to_path_buf()
-            }
-        }
+        Some(p) => make_path_absolute(&p.to_path_buf())?,
         None => PathBuf::from("."),
     };
 
