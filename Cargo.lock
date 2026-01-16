@@ -2085,7 +2085,7 @@ checksum = "f17a85883d4e6d00e8a97c586de764dabcc06133f7f1d55dce5cdc070ad7fe59"
 [[package]]
 name = "wit-bindgen-core"
 version = "0.51.0"
-source = "git+https://github.com/bytecodealliance/wit-bindgen?rev=da3f633daf32937823f276046bc20bffbeabb3dc#da3f633daf32937823f276046bc20bffbeabb3dc"
+source = "git+https://github.com/bytecodealliance/wit-bindgen?rev=822fdb1ae6279933be9f0a6b18901adf9997398d#822fdb1ae6279933be9f0a6b18901adf9997398d"
 dependencies = [
  "anyhow",
  "heck",
@@ -2095,7 +2095,7 @@ dependencies = [
 [[package]]
 name = "wit-bindgen-go"
 version = "0.51.0"
-source = "git+https://github.com/bytecodealliance/wit-bindgen?rev=da3f633daf32937823f276046bc20bffbeabb3dc#da3f633daf32937823f276046bc20bffbeabb3dc"
+source = "git+https://github.com/bytecodealliance/wit-bindgen?rev=822fdb1ae6279933be9f0a6b18901adf9997398d#822fdb1ae6279933be9f0a6b18901adf9997398d"
 dependencies = [
  "anyhow",
  "heck",

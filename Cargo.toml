@@ -39,6 +39,6 @@ clap = { version = "4.5.53", features = ["derive"] }
 regex = "1.12.2"
 wat = { version = "1.243.0"}
 # TODO: Update once v0.52.0 releases
-wit-bindgen-go = { git = "https://github.com/bytecodealliance/wit-bindgen", rev = "da3f633daf32937823f276046bc20bffbeabb3dc" }
+wit-bindgen-go = { git = "https://github.com/bytecodealliance/wit-bindgen", rev = "822fdb1ae6279933be9f0a6b18901adf9997398d" }
 wit-component = "0.244.0"
 wit-parser = "0.244.0"

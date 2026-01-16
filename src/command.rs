@@ -84,11 +84,10 @@ pub struct Bindings {
     #[arg(long)]
     pub format: bool,
 
-    /// The name of the Go module housing the generated bindings (or "wit_component" if `None`).
-    ///
-    /// This option is used if the generated bindings will be used as a library.
+    /// If specified, organize the bindings into a package for use as a library;
+    /// otherwise (if None), the bindings will be organized for use as a standalone executable.
     #[arg(long)]
-    pub mod_name: Option<String>,
+    pub pkg_name: Option<String>,
 }
 
 pub fn run<T: Into<OsString> + Clone, I: IntoIterator<Item = T>>(args: I) -> Result<()> {
@@ -130,6 +129,6 @@ fn bindings(common: Common, bindings: Bindings) -> Result<()> {
         bindings.generate_stubs,
         bindings.format,
         bindings.output.as_deref(),
-        bindings.mod_name,
+        bindings.pkg_name,
     )
 }

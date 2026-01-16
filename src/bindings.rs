@@ -11,7 +11,7 @@ pub fn generate_bindings(
     generate_stubs: bool,
     should_format: bool,
     output: Option<&Path>,
-    mod_name: Option<String>,
+    pkg_name: Option<String>,
 ) -> Result<()> {
     let (resolve, world) = parse_wit(wit_path, world, features, all_features)?;
     let mut files = Default::default();
@@ -25,7 +25,7 @@ pub fn generate_bindings(
     wit_bindgen_go::Opts {
         generate_stubs,
         format,
-        mod_name,
+        pkg_name,
         ..Default::default()
     }
     .build()
