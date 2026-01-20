@@ -1,4 +1,18 @@
-# componentize-go
+<div align="center">
+  <h1><code>componentize-go</code></h1>
+
+  <p>
+    <strong>Build WebAssembly components with Go</strong>
+  </p>
+
+  <strong>A <a href="https://bytecodealliance.org/">Bytecode Alliance</a> project</strong>
+
+  <p>
+    <a href="https://github.com/asteurer/componentize-go/actions?query=workflow%3ACI"><img src="https://github.com/asteurer/componentize-go/workflows/CI/badge.svg" alt="build status" /></a>
+  </p>
+</div>
+
+# Overview
 This is a tool to convert a Go application to a [WebAssembly component](https://github.com/WebAssembly/component-model). It takes the following as input:
 
 - a [WIT](https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md) file or directory
