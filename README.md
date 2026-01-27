@@ -8,7 +8,7 @@
   <strong>A <a href="https://bytecodealliance.org/">Bytecode Alliance</a> project</strong>
 
   <p>
-    <a href="https://github.com/asteurer/componentize-go/actions?query=workflow%3ACI"><img src="https://github.com/asteurer/componentize-go/workflows/CI/badge.svg" alt="build status" /></a>
+    <a href="https://github.com/bytecodealliance/componentize-go/actions?query=workflow%3ACI"><img src="https://github.com/bytecodealliance/componentize-go/workflows/CI/badge.svg" alt="build status" /></a>
   </p>
 </div>
 
@@ -27,5 +27,5 @@ The output is a component which may be run using e.g. [`wasmtime`](https://githu
 
 ### Run
 ```sh
-cargo install --git https://github.com/asteurer/componentize-go
+cargo install --git https://github.com/bytecodealliance/componentize-go
 ```
