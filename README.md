@@ -13,6 +13,7 @@
 </div>
 
 # Overview
+## componentize-go
 This is a tool to convert a Go application to a [WebAssembly component](https://github.com/WebAssembly/component-model). It takes the following as input:
 
 - a [WIT](https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md) file or directory
@@ -21,11 +22,30 @@ This is a tool to convert a Go application to a [WebAssembly component](https://
 
 The output is a component which may be run using e.g. [`wasmtime`](https://github.com/bytecodealliance/wasmtime).
 
-## Installation
-### Prerequisites
+### Installation
+#### Prerequisites
 - [**Rust toolchain**](https://rust-lang.org/) - Latest version
 
-### Run
+#### Run
 ```sh
 cargo install --git https://github.com/bytecodealliance/componentize-go
 ```
+
+## go.bytecodealliance.org
+This repository hosts the vanity import path redirects for `go.bytecodealliance.org`. The HTML files in the [docs/](docs/) directory are served via GitHub Pages.
+
+### Actively Maintained Packages
+| Import Path | Description |
+|-------------|-------------|
+| `go.bytecodealliance.org/wit_types` | WIT type definitions (Option, Result, Tuple, Future, Stream, etc.) |
+| `go.bytecodealliance.org/wit_async` | Async primitives for WIT. |
+| `go.bytecodealliance.org/wit_runtime` | Runtime support for WIT. |
+
+### Legacy Packages:
+These packages are located at [bytecodealliance/go-modules](https://github.com/bytecodealliance/go-modules)
+| Import Path | Description |
+|-------------|-------------|
+| `go.bytecodealliance.org/cm` | Component Model types and utilities for use with TinyGo. |
+| `go.bytecodealliance.org/wit` | TinyGo representation of the WIT (WebAssembly Interface Type) specification. |
+| `go.bytecodealliance.org/cmd/wit-bindgen-go` | Legacy wit-bindgen-go for use with TinyGo. |
+| `go.bytecodealliance.org/x` | Experimental packages. |

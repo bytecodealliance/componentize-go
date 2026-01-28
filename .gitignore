@@ -1,13 +1,12 @@
 target
-go.mod
-go.sum
 *.wasm
-wasi_*
-wit_*
-.crates.toml
-.crates2.json
+
+# TODO: Remove once wasip3 patch is merged into Big GO
 go-*-bootstrap*
-# examples/wasip2 stub
-export_wasi_http_handler/wit_bindings.go
-# examples/wasip3 stub
-export_wasi_http_incoming_handler/wit_bindings.go
+
+# Ignoring generated code
+examples/*/go.mod
+examples/*/go.sum
+examples/*/wasi_*
+examples/*/wit_*
+examples/*/export_wasi*
