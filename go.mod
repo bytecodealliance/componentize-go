@@ -1,3 +1,3 @@
 module go.bytecodealliance.org
 
-go 1.25.5
+go 1.25
