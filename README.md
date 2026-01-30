@@ -37,9 +37,9 @@ This repository hosts the vanity import path redirects for `go.bytecodealliance.
 ### Actively Maintained Packages
 | Import Path | Description |
 |-------------|-------------|
-| `go.bytecodealliance.org/wit_types` | WIT type definitions (Option, Result, Tuple, Future, Stream, etc.) |
-| `go.bytecodealliance.org/wit_async` | Async primitives for WIT. |
-| `go.bytecodealliance.org/wit_runtime` | Runtime support for WIT. |
+| `go.bytecodealliance.org/wit-bindgen/wit_types` | WIT type definitions (Option, Result, Tuple, Future, Stream, etc.) |
+| `go.bytecodealliance.org/wit-bindgen/wit_async` | Async primitives for WIT. |
+| `go.bytecodealliance.org/wit-bindgen/wit_runtime` | Runtime support for WIT. |
 
 ### Legacy Packages:
 These packages are located at [bytecodealliance/go-modules](https://github.com/bytecodealliance/go-modules)

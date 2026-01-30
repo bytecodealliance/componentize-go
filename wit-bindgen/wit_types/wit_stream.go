@@ -4,8 +4,8 @@ import (
 	"runtime"
 	"unsafe"
 
-	"go.bytecodealliance.org/wit_async"
-	"go.bytecodealliance.org/wit_runtime"
+	"go.bytecodealliance.org/wit-bindgen/wit_async"
+	"go.bytecodealliance.org/wit-bindgen/wit_runtime"
 )
 
 type StreamVtable[T any] struct {
