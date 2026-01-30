@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"unsafe"
 
-	"go.bytecodealliance.org/wit_runtime"
+	"go.bytecodealliance.org/wit-bindgen/wit_runtime"
 )
 
 const EVENT_NONE uint32 = 0
