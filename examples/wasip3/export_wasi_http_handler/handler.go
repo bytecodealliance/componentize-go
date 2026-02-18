@@ -8,7 +8,7 @@ import (
 	"wit_component/wasi_http_handler"
 	. "wit_component/wasi_http_types"
 
-	. "github.com/bytecodealliance/wit-bindgen/wit_types"
+	. "go.bytecodealliance.org/pkg/wit/types"
 )
 
 // Handle the specified `Request`, returning a `Response`
@@ -58,7 +58,7 @@ func Handle(request *Request) Result[*Response, ErrorCode] {
 			channel := make(chan Tuple2[string, string])
 			for _, url := range urls {
 				go func() {
-					channel <- Tuple2[string, string]{url, getSha256(url)}
+					channel <- Tuple2[string, string]{F0: url, F1: getSha256(url)}
 				}()
 			}
 
@@ -70,7 +70,7 @@ func Handle(request *Request) Result[*Response, ErrorCode] {
 
 		response, send := ResponseNew(
 			FieldsFromList([]Tuple2[string, []uint8]{
-				Tuple2[string, []uint8]{"content-type", []uint8("text/plain")},
+				{F0: "content-type", F1: []uint8("text/plain")},
 			}).Ok(),
 			Some(rx),
 			trailersFuture(),

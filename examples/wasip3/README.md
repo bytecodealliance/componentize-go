@@ -14,7 +14,7 @@ everything is merged, we'll be able to switch to the upstream releases.
 ### Prerequisites
 - [**componentize-go**](https://github.com/bytecodealliance/componentize-go) - Latest version
 - [**go**](https://github.com/dicej/go/releases/tag/go1.25.5-wasi-on-idle) - The [Makefile](./Makefile) installs the patched version of Go.
-- [**wasmtime**](https://github.com/bytecodealliance/wasmtime)  - Latest version
+- [**wasmtime**](https://github.com/bytecodealliance/wasmtime)  - v40.0.2
 
 This will build the dependencies, generate Go bindings from the
 `wasi:http@0.3.0-rc-2025-09-16` WIT files, build the component, and run it using

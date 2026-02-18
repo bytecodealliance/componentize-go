@@ -3,7 +3,7 @@ package export_wasi_http_incoming_handler
 import (
 	. "wit_component/wasi_http_types"
 
-	. "github.com/bytecodealliance/wit-bindgen/wit_types"
+	. "go.bytecodealliance.org/pkg/wit/types"
 )
 
 // Handle the specified `Request`, returning a `Response`

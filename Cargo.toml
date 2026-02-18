@@ -37,8 +37,7 @@ allow_attributes_without_reason = 'warn'
 anyhow = { workspace = true}
 clap = { version = "4.5.53", features = ["derive"] }
 regex = "1.12.2"
-wat = { version = "1.243.0"}
-# TODO: Update once v0.52.0 releases
-wit-bindgen-go = { git = "https://github.com/bytecodealliance/wit-bindgen", rev = "822fdb1ae6279933be9f0a6b18901adf9997398d" }
-wit-component = "0.244.0"
-wit-parser = "0.244.0"
+wat = { version = "1.245.1"}
+wit-bindgen-go = { git = "https://github.com/asteurer/wit-bindgen", rev = "ad98571fdd93de6057c4572e16ba5c6f5ac17ae7" }
+wit-component = "0.245.1"
+wit-parser = "0.245.1"
