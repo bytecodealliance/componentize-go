@@ -66,7 +66,7 @@ pub fn build_module(
     ];
 
     let output = if only_wasip1 {
-        unimplemented!();
+        unimplemented!("Building wasip1 Go apps isn't supported quite yet.");
         // TODO: for when/if we decide to allow users to build wasm modules without componentizing them
         #[allow(unreachable_code)]
         Command::new(&go)
