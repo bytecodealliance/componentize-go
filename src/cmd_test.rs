@@ -74,7 +74,7 @@ pub fn build_test_module(
             .env("GOARCH", "wasm")
             .output()?
     } else {
-        unimplemented!();
+        unimplemented!("Please use the --wasip1 flag when building unit tests");
 
         // TODO: for when we figure out how wasip2 tests are to be run
         #[allow(unreachable_code)]
