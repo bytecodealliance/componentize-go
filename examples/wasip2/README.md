@@ -21,5 +21,10 @@ curl localhost:8080
 ### Run unit tests
 
 ```sh
+# Method 1: compile the tests into wasm modules and run them with wasmtime
 make run-tests
+
+# Method 2: run the tests directly with `go test`
+make generate-bindings
+go test ./unit_tests_should_pass ./unit_tests_should_fail
 ```

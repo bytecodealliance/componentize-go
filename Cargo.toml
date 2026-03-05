@@ -38,6 +38,6 @@ anyhow = { workspace = true}
 clap = { version = "4.5.60", features = ["derive"] }
 regex = "1.12.3"
 wat = { version = "1.245.1"}
-wit-bindgen-go = { git = "https://github.com/bytecodealliance/wit-bindgen", rev = "ff9543d42d0d7e56ed529e03dc2f7cc02db6c141" }
+wit-bindgen-go = { git = "https://github.com/bytecodealliance/wit-bindgen", rev = "3ee9fe20a5bce398360d5d291e81a4224a6d7c76" }
 wit-component = "0.245.1"
 wit-parser = "0.245.1"
