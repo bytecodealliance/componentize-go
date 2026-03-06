@@ -9,3 +9,6 @@ examples/*/go.mod
 examples/*/go.sum
 examples/*/wasi_*
 examples/*/wit_*
+
+# Not generated
+!examples/wasip1/go.mod
