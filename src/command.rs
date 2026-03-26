@@ -91,10 +91,6 @@ pub struct Build {
     #[arg(long, short = 'o')]
     pub output: Option<PathBuf>,
 
-    /// The directory containing the "go.mod" file (or current directory if `None`).
-    #[arg(long = "mod")]
-    pub mod_path: Option<PathBuf>,
-
     /// The path to the Go binary (or look for binary in PATH if `None`).
     #[arg(long)]
     pub go: Option<PathBuf>,
@@ -170,12 +166,7 @@ pub fn run<T: Into<OsString> + Clone, I: IntoIterator<Item = T>>(args: I) -> Res
 
 fn build(wit_opts: WitOpts, build: Build) -> Result<()> {
     // Build a wasm module using `go build`.
-    let module = build_module(
-        build.mod_path.as_ref(),
-        build.output.as_ref(),
-        build.go.as_ref(),
-        build.wasip1,
-    )?;
+    let module = build_module(build.output.as_ref(), build.go.as_ref(), build.wasip1)?;
 
     if !build.wasip1 {
         // Embed the WIT documents in the wasip1 component.
