@@ -42,10 +42,11 @@ pub struct WitOpts {
     /// This may be specified more than once, in which case the worlds will be
     /// merged.
     ///
-    /// Note that, unless `--ignore-toml-files` is specified, `componentize-go`
-    /// will also use `go list` to scan the current Go module and its
-    /// dependencies to find any `componentize-go.toml` files.  The WIT worlds
-    /// referenced by any such files will be added to this list automatically.
+    /// Note that, unless `--ignore-toml-files` _or_ at least one `--world`
+    /// option is specified, `componentize-go` will use `go list` to scan the
+    /// current Go module and its dependencies to find any
+    /// `componentize-go.toml` files, and the WIT worlds referenced by any such
+    /// files will be used.
     #[arg(long, short = 'w')]
     pub world: Vec<String>,
 
