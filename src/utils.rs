@@ -108,6 +108,9 @@ fn maybe_add_dependencies(
         .map(|v| PathBuf::from(v.as_ref()))
         .collect::<BTreeSet<_>>();
     let mut worlds = worlds.iter().cloned().collect::<BTreeSet<_>>();
+    // Only add worlds from `componentize-go.toml` files if none were specified
+    // explicitly via the CLI:
+    let add_worlds = worlds.is_empty();
 
     if !ignore_toml_files && Path::new("go.mod").exists() {
         let mut command = std::process::Command::new("go");
@@ -133,7 +136,9 @@ fn maybe_add_dependencies(
             let module = PathBuf::from(module);
             if let Ok(manifest) = std::fs::read_to_string(module.join("componentize-go.toml")) {
                 let config = toml::from_str::<ComponentizeGoConfig>(&manifest)?;
-                worlds.extend(config.worlds);
+                if add_worlds {
+                    worlds.extend(config.worlds);
+                }
                 paths.extend(config.wit_paths.into_iter().map(|v| module.join(v)));
             }
         }
