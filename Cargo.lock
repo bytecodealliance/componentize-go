@@ -228,10 +228,15 @@ name = "componentize-go"
 version = "0.2.0"
 dependencies = [
  "anyhow",
+ "bzip2",
  "clap",
+ "dirs",
  "regex",
+ "reqwest",
  "serde",
+ "tar",
  "toml",
+ "which",
  "wit-bindgen-go",
  "wit-component",
  "wit-parser",
@@ -262,6 +267,27 @@ name = "core-foundation-sys"
 version = "0.8.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
+
+[[package]]
+name = "dirs"
+version = "6.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3e8aa94d75141228480295a7d0e7feb620b1a5ad9f12bc40be62411e38cce4e"
+dependencies = [
+ "dirs-sys",
+]
+
+[[package]]
+name = "dirs-sys"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e01a3366d27ee9890022452ee61b2b63a67e6f13f58900b651ff5665f0bb1fab"
+dependencies = [
+ "libc",
+ "option-ext",
+ "redox_users",
+ "windows-sys 0.61.2",
+]
 
 [[package]]
 name = "displaydoc"
@@ -849,6 +875,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f50d9b3dabb09ecd771ad0aa242ca6894994c130308ca3d7684634df8037391"
 
 [[package]]
+name = "option-ext"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
+
+[[package]]
 name = "percent-encoding"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1000,6 +1032,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49f3fe0889e69e2ae9e41f4d6c4c0181701d00e4697b356fb1f74173a5e0ee27"
 dependencies = [
  "bitflags",
+]
+
+[[package]]
+name = "redox_users"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4e608c6638b9c18977b00b475ac1f28d14e84b27d8d42f70e0bf1e3dec127ac"
+dependencies = [
+ "getrandom 0.2.16",
+ "libredox",
+ "thiserror 2.0.17",
 ]
 
 [[package]]
@@ -1827,6 +1870,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "which"
+version = "8.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81995fafaaaf6ae47a7d0cc83c67caf92aeb7e5331650ae6ff856f7c0c60c459"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "winapi-util"
 version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2106,8 +2158,8 @@ checksum = "f17a85883d4e6d00e8a97c586de764dabcc06133f7f1d55dce5cdc070ad7fe59"
 
 [[package]]
 name = "wit-bindgen-core"
-version = "0.53.1"
-source = "git+https://github.com/bytecodealliance/wit-bindgen?rev=3ee9fe20a5bce398360d5d291e81a4224a6d7c76#3ee9fe20a5bce398360d5d291e81a4224a6d7c76"
+version = "0.54.0"
+source = "git+https://github.com/dicej/wit-bindgen?rev=b163b3b5#b163b3b55891a73b4c26c4bb305cf835da544519"
 dependencies = [
  "anyhow",
  "heck",
@@ -2116,8 +2168,8 @@ dependencies = [
 
 [[package]]
 name = "wit-bindgen-go"
-version = "0.53.1"
-source = "git+https://github.com/bytecodealliance/wit-bindgen?rev=3ee9fe20a5bce398360d5d291e81a4224a6d7c76#3ee9fe20a5bce398360d5d291e81a4224a6d7c76"
+version = "0.54.0"
+source = "git+https://github.com/dicej/wit-bindgen?rev=b163b3b5#b163b3b55891a73b4c26c4bb305cf835da544519"
 dependencies = [
  "anyhow",
  "heck",
