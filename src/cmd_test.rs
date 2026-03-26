@@ -12,15 +12,10 @@ use std::{
 pub fn build_test_module(
     path: &Path,
     output_dir: Option<&PathBuf>,
-    go_path: Option<&PathBuf>,
+    go: &Path,
     only_wasip1: bool,
 ) -> Result<PathBuf> {
-    let go = match &go_path {
-        Some(p) => make_path_absolute(p)?,
-        None => PathBuf::from("go"),
-    };
-
-    check_go_version(&go)?;
+    check_go_version(go)?;
 
     let test_wasm_path = {
         // The directory in which the test component will be placed
@@ -68,7 +63,7 @@ pub fn build_test_module(
     ];
 
     let output = if only_wasip1 {
-        Command::new(&go)
+        Command::new(go)
             .args(module_args)
             .env("GOOS", "wasip1")
             .env("GOARCH", "wasm")
@@ -80,7 +75,7 @@ pub fn build_test_module(
 
         // TODO: for when we figure out how wasip2 tests are to be run
         #[allow(unreachable_code)]
-        Command::new(&go)
+        Command::new(go)
             .args(component_args)
             .env("GOOS", "wasip1")
             .env("GOARCH", "wasm")

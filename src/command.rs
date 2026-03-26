@@ -2,7 +2,7 @@ use crate::{
     cmd_bindings::generate_bindings,
     cmd_build::build_module,
     cmd_test::build_test_module,
-    utils::{embed_wit, module_to_component},
+    utils::{dummy_wit, embed_wit, module_to_component, parse_wit, pick_go},
 };
 use anyhow::{Result, anyhow};
 use clap::{Parser, Subcommand};
@@ -92,6 +92,13 @@ pub struct Build {
     pub output: Option<PathBuf>,
 
     /// The path to the Go binary (or look for binary in PATH if `None`).
+    ///
+    /// If the target WIT world uses async features, and the specified Go binary
+    /// (or the one in PATH if `None`) does not include [this
+    /// patch](https://github.com/golang/go/pull/76775), a patched version will
+    /// be downloaded, stored in the current user's [cache
+    /// directory](https://docs.rs/dirs/latest/dirs/fn.cache_dir.html), and used
+    /// for building.
     #[arg(long)]
     pub go: Option<PathBuf>,
 
@@ -125,6 +132,13 @@ pub struct Test {
     pub output: Option<PathBuf>,
 
     /// The path to the Go binary (or look for binary in PATH if `None`).
+    ///
+    /// If the target WIT world uses async features, and the specified Go binary
+    /// (or the one in PATH if `None`) does not include [this
+    /// patch](https://github.com/golang/go/pull/76775), a patched version will
+    /// be downloaded, stored in the current user's [cache
+    /// directory](https://docs.rs/dirs/latest/dirs/fn.cache_dir.html), and used
+    /// for testing.
     #[arg(long)]
     pub go: Option<PathBuf>,
 
@@ -153,6 +167,15 @@ pub struct Bindings {
     /// otherwise (if None), the bindings will be organized for use as a standalone executable.
     #[arg(long)]
     pub pkg_name: Option<String>,
+
+    /// When `--pkg-name` is specified, optionally specify a different package
+    /// for exports.
+    ///
+    /// This allows you to put the exports and imports in separate packages when
+    /// building a library.  If only `--pkg-name` is specified, this will
+    /// default to that value.
+    #[arg(long, requires = "pkg_name")]
+    pub export_pkg_name: Option<String>,
 }
 
 pub fn run<T: Into<OsString> + Clone, I: IntoIterator<Item = T>>(args: I) -> Result<()> {
@@ -165,19 +188,26 @@ pub fn run<T: Into<OsString> + Clone, I: IntoIterator<Item = T>>(args: I) -> Res
 }
 
 fn build(wit_opts: WitOpts, build: Build) -> Result<()> {
-    // Build a wasm module using `go build`.
-    let module = build_module(build.output.as_ref(), build.go.as_ref(), build.wasip1)?;
-
-    if !build.wasip1 {
-        // Embed the WIT documents in the wasip1 component.
-        embed_wit(
-            &module,
+    let (resolve, world) = if build.wasip1 {
+        dummy_wit()
+    } else {
+        parse_wit(
             &wit_opts.wit_path,
             &wit_opts.world,
             wit_opts.ignore_toml_files,
             &wit_opts.features,
             wit_opts.all_features,
-        )?;
+        )?
+    };
+
+    let go = &pick_go(&resolve, world, build.go.as_deref())?;
+
+    // Build a wasm module using `go build`.
+    let module = build_module(build.output.as_ref(), go, build.wasip1)?;
+
+    if !build.wasip1 {
+        // Embed the WIT documents in the wasip1 component.
+        embed_wit(&module, &resolve, world)?;
 
         // Update the wasm module to use the current component model ABI.
         module_to_component(&module, build.adapt.as_deref())?;
@@ -187,24 +217,31 @@ fn build(wit_opts: WitOpts, build: Build) -> Result<()> {
 }
 
 fn test(wit_opts: WitOpts, test: Test) -> Result<()> {
+    let (resolve, world) = if test.wasip1 {
+        dummy_wit()
+    } else {
+        parse_wit(
+            &wit_opts.wit_path,
+            &wit_opts.world,
+            wit_opts.ignore_toml_files,
+            &wit_opts.features,
+            wit_opts.all_features,
+        )?
+    };
+
+    let go = &pick_go(&resolve, world, test.go.as_deref())?;
+
     if test.pkg.is_empty() {
         return Err(anyhow!("Path to a package containing Go tests is required"));
     }
 
     for pkg in test.pkg.iter() {
         // Build a wasm module using `go test -c`.
-        let module = build_test_module(pkg, test.output.as_ref(), test.go.as_ref(), test.wasip1)?;
+        let module = build_test_module(pkg, test.output.as_ref(), go, test.wasip1)?;
 
         if !test.wasip1 {
             // Embed the WIT documents in the wasm module.
-            embed_wit(
-                &module,
-                &wit_opts.wit_path,
-                &wit_opts.world,
-                wit_opts.ignore_toml_files,
-                &wit_opts.features,
-                wit_opts.all_features,
-            )?;
+            embed_wit(&module, &resolve, world)?;
 
             // Update the wasm module to use the current component model ABI.
             module_to_component(&module, test.adapt.as_deref())?;
@@ -215,15 +252,21 @@ fn test(wit_opts: WitOpts, test: Test) -> Result<()> {
 }
 
 fn bindings(wit_opts: WitOpts, bindings: Bindings) -> Result<()> {
-    generate_bindings(
+    let (mut resolve, world) = parse_wit(
         &wit_opts.wit_path,
         &wit_opts.world,
         wit_opts.ignore_toml_files,
         &wit_opts.features,
         wit_opts.all_features,
+    )?;
+
+    generate_bindings(
+        &mut resolve,
+        world,
         bindings.generate_stubs,
         bindings.format,
         bindings.output.as_deref(),
         bindings.pkg_name,
+        bindings.export_pkg_name,
     )
 }
