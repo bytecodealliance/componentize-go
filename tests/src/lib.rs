@@ -30,68 +30,6 @@ mod tests {
         root_manifest.join("target/release/componentize-go")
     });
 
-    // TODO: Once the patch is merged in Big Go, this needs to be removed.
-    async fn patched_go_path() -> PathBuf {
-        let test_manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let root_manifest = test_manifest.parent().unwrap();
-
-        // Determine OS and architecture
-        let os = match std::env::consts::OS {
-            "macos" => "darwin",
-            "linux" => "linux",
-            "windows" => "windows",
-            bad_os => panic!("OS not supported: {bad_os}"),
-        };
-
-        // Map to Go's naming conventions
-        let arch = match std::env::consts::ARCH {
-            "aarch64" => "arm64",
-            "x86_64" => "amd64",
-            bad_arch => panic!("ARCH not supported: {bad_arch}"),
-        };
-
-        let go_dir = format!("go-{os}-{arch}-bootstrap");
-        let go_path = root_manifest.join(&go_dir);
-        let go_bin = go_path.join("bin").join("go");
-
-        // Skip if already installed
-        if go_bin.exists() {
-            return go_bin;
-        }
-
-        // Download the patched Go toolchain
-        let archive_name = format!("{go_dir}.tbz");
-        let archive_path = root_manifest.join(&archive_name);
-        let download_url = format!(
-            "https://github.com/dicej/go/releases/download/go1.25.5-wasi-on-idle/{archive_name}"
-        );
-
-        println!("Downloading patched Go from {download_url}");
-        let response = reqwest::get(&download_url)
-            .await
-            .expect("Failed to download patched Go");
-
-        std::fs::write(
-            &archive_path,
-            response.bytes().await.expect("Failed to read download"),
-        )
-        .expect("Failed to write archive");
-
-        // Extract the archive
-        println!("Extracting {} to {}", archive_name, root_manifest.display());
-        let tar_file = std::fs::File::open(&archive_path).expect("Failed to open archive");
-        let tar_decoder = bzip2::read::BzDecoder::new(tar_file);
-        let mut archive = tar::Archive::new(tar_decoder);
-        archive
-            .unpack(root_manifest)
-            .expect("Failed to extract archive");
-
-        // Clean up archive
-        std::fs::remove_file(&archive_path).ok();
-
-        go_bin
-    }
-
     struct App {
         /// The path to the example application
         path: String,
@@ -159,10 +97,10 @@ mod tests {
             }
         }
 
-        fn build_test_modules(&self, go: Option<&PathBuf>) -> Result<()> {
+        fn build_test_modules(&self) -> Result<()> {
             let test_pkgs = self.tests.as_ref().expect("missing test_pkg_paths");
 
-            self.generate_bindings(go)?;
+            self.generate_bindings()?;
 
             let mut test_cmd = Command::new(COMPONENTIZE_GO_PATH.as_path());
             test_cmd
@@ -262,17 +200,13 @@ mod tests {
             Ok(())
         }
 
-        fn build_module(&self, go: Option<&PathBuf>) -> Result<()> {
+        fn build_module(&self) -> Result<()> {
             // Build component
             let mut build_cmd = Command::new(COMPONENTIZE_GO_PATH.as_path());
             build_cmd
                 .arg("build")
                 .arg("--wasip1")
                 .args(["-o", &self.wasm_path]);
-
-            if let Some(go_path) = go.as_ref() {
-                build_cmd.args(["--go", go_path.to_str().unwrap()]);
-            }
 
             // Run `go build` in the same directory as the go.mod file.
             build_cmd.current_dir(&self.path);
@@ -293,8 +227,8 @@ mod tests {
             Ok(())
         }
 
-        fn build_component(&self, go: Option<&PathBuf>) -> Result<()> {
-            self.generate_bindings(go)?;
+        fn build_component(&self) -> Result<()> {
+            self.generate_bindings()?;
 
             // Build component
             let mut build_cmd = Command::new(COMPONENTIZE_GO_PATH.as_path());
@@ -304,10 +238,6 @@ mod tests {
                 .arg("build")
                 .args(["-o", &self.wasm_path]);
 
-            if let Some(go_path) = go.as_ref() {
-                build_cmd.args(["--go", go_path.to_str().unwrap()]);
-            }
-
             // Run `go build` in the same directory as the go.mod file.
             build_cmd.current_dir(&self.path);
 
@@ -327,7 +257,7 @@ mod tests {
             Ok(())
         }
 
-        fn generate_bindings(&self, go: Option<&PathBuf>) -> Result<()> {
+        fn generate_bindings(&self) -> Result<()> {
             let bindings_output = Command::new(COMPONENTIZE_GO_PATH.as_path())
                 .args(["-w", self.world.as_ref().expect("missing WIT world")])
                 .args(["-d", self.wit_path.as_ref().expect("missing WIT path")])
@@ -347,17 +277,12 @@ mod tests {
             }
 
             // Tidy Go mod
-            let tidy_output = Command::new(if let Some(path) = go.as_ref() {
-                String::from(path.to_str().unwrap())
-            } else {
-                // Default to PATH
-                "go".to_string()
-            })
-            .arg("mod")
-            .arg("tidy")
-            .current_dir(&self.path)
-            .output()
-            .expect("failed to tidy Go mod");
+            let tidy_output = Command::new("go")
+                .arg("mod")
+                .arg("tidy")
+                .current_dir(&self.path)
+                .output()
+                .expect("failed to tidy Go mod");
             if !tidy_output.status.success() {
                 return Err(anyhow!("{}", String::from_utf8_lossy(&tidy_output.stderr)));
             }
@@ -415,7 +340,7 @@ mod tests {
     #[test]
     fn example_wasip1() {
         let app = App::new("../examples/wasip1", None, None, false);
-        app.build_module(None).expect("failed to build app module");
+        app.build_module().expect("failed to build app module");
         app.run_module().expect("failed to run app module");
     }
 
@@ -439,13 +364,13 @@ mod tests {
             true,
         );
 
-        app.build_component(None).expect("failed to build app");
+        app.build_component().expect("failed to build app");
 
         app.run_component("/", "Hello, world!")
             .await
             .expect("app failed to run");
 
-        app.build_test_modules(None)
+        app.build_test_modules()
             .expect("failed to build app unit tests");
 
         app.run_test_modules()
@@ -455,8 +380,7 @@ mod tests {
     #[tokio::test]
     async fn example_wasip3() {
         let mut app = App::new("../examples/wasip3", Some("wasip3-example"), None, true);
-        app.build_component(Some(&patched_go_path().await))
-            .expect("failed to build app");
+        app.build_component().expect("failed to build app");
         app.run_component("/hello", "Hello, world!")
             .await
             .expect("app failed to run");

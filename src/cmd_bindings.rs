@@ -1,19 +1,18 @@
-use crate::utils::{make_path_absolute, parse_wit};
+use crate::utils::make_path_absolute;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
+use wit_parser::{Resolve, WorldId};
 
 #[allow(clippy::too_many_arguments)]
 pub fn generate_bindings(
-    wit_path: &[impl AsRef<Path>],
-    world: Option<&str>,
-    features: &[String],
-    all_features: bool,
+    resolve: &mut Resolve,
+    world: WorldId,
     generate_stubs: bool,
     should_format: bool,
     output: Option<&Path>,
     pkg_name: Option<String>,
+    export_pkg_name: Option<String>,
 ) -> Result<()> {
-    let (mut resolve, world) = parse_wit(wit_path, world, features, all_features)?;
     let mut files = Default::default();
 
     let format = if should_format {
@@ -36,13 +35,14 @@ pub fn generate_bindings(
         generate_stubs,
         format,
         pkg_name,
+        export_pkg_name,
         ..Default::default()
     }
     .build()
-    .generate(&mut resolve, world, &mut files)?;
+    .generate(resolve, world, &mut files)?;
 
     let output_path = match output {
-        Some(p) => make_path_absolute(&p.to_path_buf())?,
+        Some(p) => make_path_absolute(p)?,
         None => PathBuf::from("."),
     };
 
