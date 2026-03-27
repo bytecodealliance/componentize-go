@@ -7,7 +7,6 @@ use std::{path::PathBuf, process::Command};
 /// If the module is not going to be adapted to the component model,
 /// set the `only_wasip1` arg to true.
 pub fn build_module(
-    go_module: Option<&PathBuf>,
     out: Option<&PathBuf>,
     go_path: Option<&PathBuf>,
     only_wasip1: bool,
@@ -33,22 +32,11 @@ pub fn build_module(
         .to_str()
         .ok_or_else(|| anyhow!("Output path is not valid unicode"))?;
 
-    let module_path = match &go_module {
-        Some(p) => {
-            if !p.is_dir() {
-                return Err(anyhow!("Module path '{}' is not a directory", p.display()));
-            }
-            p.to_str()
-                .ok_or_else(|| anyhow!("Module path is not valid unicode"))?
-        }
-        None => ".",
-    };
-
     // The -buildmode flag mutes the module's output, so it is ommitted
     let module_args = [
         "build",
         "-C",
-        module_path,
+        ".",
         "-ldflags=-checklinkname=0",
         "-o",
         out_path,
@@ -57,7 +45,7 @@ pub fn build_module(
     let component_args = [
         "build",
         "-C",
-        module_path,
+        ".",
         "-buildmode=c-shared",
         "-ldflags=-checklinkname=0",
         "-o",

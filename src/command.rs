@@ -28,12 +28,30 @@ pub struct WitOpts {
     ///
     /// These paths can be either directories containing `*.wit` files, `*.wit`
     /// files themselves, or `*.wasm` files which are wasm-encoded WIT packages.
+    ///
+    /// Note that, unless `--ignore-toml-files` is specified, `componentize-go`
+    /// will also use `go list` to scan the current Go module and its
+    /// dependencies to find any `componentize-go.toml` files.  The WIT
+    /// documents referenced by any such files will be added to this list
+    /// automatically.
     #[arg(long, short = 'd')]
     pub wit_path: Vec<PathBuf>,
 
-    /// Name of world to target (or default world if `None`).
+    /// Name of world to target (or default world if not specified).
+    ///
+    /// This may be specified more than once, in which case the worlds will be
+    /// merged.
+    ///
+    /// Note that, unless `--ignore-toml-files` _or_ at least one `--world`
+    /// option is specified, `componentize-go` will use `go list` to scan the
+    /// current Go module and its dependencies to find any
+    /// `componentize-go.toml` files, and the WIT worlds referenced by any such
+    /// files will be used.
     #[arg(long, short = 'w')]
-    pub world: Option<String>,
+    pub world: Vec<String>,
+
+    #[arg(long)]
+    pub ignore_toml_files: bool,
 
     /// Whether or not to activate all WIT features when processing WIT files.
     ///
@@ -72,10 +90,6 @@ pub struct Build {
     /// Final output path for the component (or `./main.wasm` if `None`).
     #[arg(long, short = 'o')]
     pub output: Option<PathBuf>,
-
-    /// The directory containing the "go.mod" file (or current directory if `None`).
-    #[arg(long = "mod")]
-    pub mod_path: Option<PathBuf>,
 
     /// The path to the Go binary (or look for binary in PATH if `None`).
     #[arg(long)]
@@ -144,19 +158,15 @@ pub fn run<T: Into<OsString> + Clone, I: IntoIterator<Item = T>>(args: I) -> Res
 
 fn build(wit_opts: WitOpts, build: Build) -> Result<()> {
     // Build a wasm module using `go build`.
-    let module = build_module(
-        build.mod_path.as_ref(),
-        build.output.as_ref(),
-        build.go.as_ref(),
-        build.wasip1,
-    )?;
+    let module = build_module(build.output.as_ref(), build.go.as_ref(), build.wasip1)?;
 
     if !build.wasip1 {
         // Embed the WIT documents in the wasip1 component.
         embed_wit(
             &module,
             &wit_opts.wit_path,
-            wit_opts.world.as_deref(),
+            &wit_opts.world,
+            wit_opts.ignore_toml_files,
             &wit_opts.features,
             wit_opts.all_features,
         )?;
@@ -182,7 +192,8 @@ fn test(wit_opts: WitOpts, test: Test) -> Result<()> {
             embed_wit(
                 &module,
                 &wit_opts.wit_path,
-                wit_opts.world.as_deref(),
+                &wit_opts.world,
+                wit_opts.ignore_toml_files,
                 &wit_opts.features,
                 wit_opts.all_features,
             )?;
@@ -197,8 +208,9 @@ fn test(wit_opts: WitOpts, test: Test) -> Result<()> {
 
 fn bindings(wit_opts: WitOpts, bindings: Bindings) -> Result<()> {
     generate_bindings(
-        wit_opts.wit_path.as_ref(),
-        wit_opts.world.as_deref(),
+        &wit_opts.wit_path,
+        &wit_opts.world,
+        wit_opts.ignore_toml_files,
         &wit_opts.features,
         wit_opts.all_features,
         bindings.generate_stubs,
