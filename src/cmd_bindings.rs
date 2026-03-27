@@ -4,8 +4,9 @@ use std::path::{Path, PathBuf};
 
 #[allow(clippy::too_many_arguments)]
 pub fn generate_bindings(
-    wit_path: &[impl AsRef<Path>],
-    world: Option<&str>,
+    paths: &[impl AsRef<Path>],
+    worlds: &[String],
+    ignore_toml_files: bool,
     features: &[String],
     all_features: bool,
     generate_stubs: bool,
@@ -13,7 +14,7 @@ pub fn generate_bindings(
     output: Option<&Path>,
     pkg_name: Option<String>,
 ) -> Result<()> {
-    let (mut resolve, world) = parse_wit(wit_path, world, features, all_features)?;
+    let (mut resolve, world) = parse_wit(paths, worlds, ignore_toml_files, features, all_features)?;
     let mut files = Default::default();
 
     let format = if should_format {

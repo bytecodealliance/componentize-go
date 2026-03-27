@@ -28,12 +28,30 @@ pub struct WitOpts {
     ///
     /// These paths can be either directories containing `*.wit` files, `*.wit`
     /// files themselves, or `*.wasm` files which are wasm-encoded WIT packages.
+    ///
+    /// Note that, unless `--ignore-toml-files` is specified, `componentize-go`
+    /// will also use `go list` to scan the current Go module and its
+    /// dependencies to find any `componentize-go.toml` files.  The WIT
+    /// documents referenced by any such files will be added to this list
+    /// automatically.
     #[arg(long, short = 'd')]
     pub wit_path: Vec<PathBuf>,
 
-    /// Name of world to target (or default world if `None`).
+    /// Name of world to target (or default world if not specified).
+    ///
+    /// This may be specified more than once, in which case the worlds will be
+    /// merged.
+    ///
+    /// Note that, unless `--ignore-toml-files` _or_ at least one `--world`
+    /// option is specified, `componentize-go` will use `go list` to scan the
+    /// current Go module and its dependencies to find any
+    /// `componentize-go.toml` files, and the WIT worlds referenced by any such
+    /// files will be used.
     #[arg(long, short = 'w')]
-    pub world: Option<String>,
+    pub world: Vec<String>,
+
+    #[arg(long)]
+    pub ignore_toml_files: bool,
 
     /// Whether or not to activate all WIT features when processing WIT files.
     ///
@@ -156,7 +174,8 @@ fn build(wit_opts: WitOpts, build: Build) -> Result<()> {
         embed_wit(
             &module,
             &wit_opts.wit_path,
-            wit_opts.world.as_deref(),
+            &wit_opts.world,
+            wit_opts.ignore_toml_files,
             &wit_opts.features,
             wit_opts.all_features,
         )?;
@@ -182,7 +201,8 @@ fn test(wit_opts: WitOpts, test: Test) -> Result<()> {
             embed_wit(
                 &module,
                 &wit_opts.wit_path,
-                wit_opts.world.as_deref(),
+                &wit_opts.world,
+                wit_opts.ignore_toml_files,
                 &wit_opts.features,
                 wit_opts.all_features,
             )?;
@@ -197,8 +217,9 @@ fn test(wit_opts: WitOpts, test: Test) -> Result<()> {
 
 fn bindings(wit_opts: WitOpts, bindings: Bindings) -> Result<()> {
     generate_bindings(
-        wit_opts.wit_path.as_ref(),
-        wit_opts.world.as_deref(),
+        &wit_opts.wit_path,
+        &wit_opts.world,
+        wit_opts.ignore_toml_files,
         &wit_opts.features,
         wit_opts.all_features,
         bindings.generate_stubs,

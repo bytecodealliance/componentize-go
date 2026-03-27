@@ -1,21 +1,26 @@
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result, anyhow, bail};
+use serde::Deserialize;
 use std::{
+    collections::BTreeSet,
     path::{Path, PathBuf},
     process::Command,
 };
-use wit_parser::{PackageId, Resolve, WorldId};
+use wit_parser::{CloneMaps, Package, PackageId, PackageName, Resolve, Stability, World, WorldId};
 
 pub fn parse_wit(
     paths: &[impl AsRef<Path>],
-    world: Option<&str>,
+    worlds: &[String],
+    ignore_toml_files: bool,
     features: &[String],
     all_features: bool,
 ) -> Result<(Resolve, WorldId)> {
+    let (paths, worlds) = &maybe_add_dependencies(paths, worlds, ignore_toml_files)?;
+
     // If no WIT directory was provided as a parameter and none were referenced
     // by Go packages, use ./wit by default.
     if paths.is_empty() {
         let paths = &[Path::new("wit")];
-        return parse_wit(paths, world, features, all_features);
+        return parse_wit(paths, worlds, ignore_toml_files, features, all_features);
     }
     debug_assert!(!paths.is_empty(), "The paths should not be empty");
 
@@ -34,13 +39,108 @@ pub fn parse_wit(
     }
 
     let mut main_packages: Vec<PackageId> = vec![];
-    for path in paths.iter().map(AsRef::as_ref) {
+    for path in paths.iter() {
         let (pkg, _files) = resolve.push_path(path)?;
         main_packages.push(pkg);
     }
 
-    let world = resolve.select_world(&main_packages, world)?;
+    let world = match &worlds[..] {
+        [] => resolve.select_world(&main_packages, None)?,
+        [world] => resolve.select_world(&main_packages, Some(world))?,
+        worlds => {
+            let worlds = worlds
+                .iter()
+                .map(|world| resolve.select_world(&main_packages, Some(world)))
+                .collect::<Result<Vec<_>>>()?;
+
+            let union_package = resolve.packages.alloc(Package {
+                name: PackageName {
+                    namespace: "componentize-go".into(),
+                    name: "union".into(),
+                    version: None,
+                },
+                docs: Default::default(),
+                interfaces: Default::default(),
+                worlds: Default::default(),
+            });
+
+            let union_world = resolve.worlds.alloc(World {
+                name: "union".into(),
+                imports: Default::default(),
+                exports: Default::default(),
+                package: Some(union_package),
+                docs: Default::default(),
+                stability: Stability::Unknown,
+                includes: Default::default(),
+                span: Default::default(),
+            });
+
+            resolve.packages[union_package]
+                .worlds
+                .insert("union".into(), union_world);
+
+            for &world in &worlds {
+                resolve.merge_worlds(world, union_world, &mut CloneMaps::default())?;
+            }
+
+            union_world
+        }
+    };
+
     Ok((resolve, world))
+}
+
+/// Unless `ignore_toml_files` is `true`, use `go list` to search the current
+/// module and its dependencies for any `componentize-go.toml` files.  The WIT
+/// path and/or world specified in each such file will be added to the
+/// respective list and returned.
+fn maybe_add_dependencies(
+    paths: &[impl AsRef<Path>],
+    worlds: &[String],
+    ignore_toml_files: bool,
+) -> Result<(Vec<PathBuf>, Vec<String>)> {
+    let mut paths = paths
+        .iter()
+        .map(|v| PathBuf::from(v.as_ref()))
+        .collect::<BTreeSet<_>>();
+    let mut worlds = worlds.iter().cloned().collect::<BTreeSet<_>>();
+    // Only add worlds from `componentize-go.toml` files if none were specified
+    // explicitly via the CLI:
+    let add_worlds = worlds.is_empty();
+
+    if !ignore_toml_files && Path::new("go.mod").exists() {
+        let mut command = std::process::Command::new("go");
+        let output = command
+            .args(["list", "-mod=readonly", "-m", "-f", "{{.Dir}}", "all"])
+            .output()?;
+        if !output.status.success() {
+            bail!(
+                "`go list` failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+        }
+
+        #[derive(Deserialize)]
+        struct ComponentizeGoConfig {
+            #[serde(default)]
+            worlds: Vec<String>,
+            #[serde(default)]
+            wit_paths: Vec<String>,
+        }
+
+        for module in String::from_utf8(output.stdout)?.lines() {
+            let module = PathBuf::from(module);
+            if let Ok(manifest) = std::fs::read_to_string(module.join("componentize-go.toml")) {
+                let config = toml::from_str::<ComponentizeGoConfig>(&manifest)?;
+                if add_worlds {
+                    worlds.extend(config.worlds);
+                }
+                paths.extend(config.wit_paths.into_iter().map(|v| module.join(v)));
+            }
+        }
+    }
+
+    Ok((paths.into_iter().collect(), worlds.into_iter().collect()))
 }
 
 // Converts a relative path to an absolute path.
@@ -53,14 +153,15 @@ pub fn make_path_absolute(p: &PathBuf) -> Result<PathBuf> {
 }
 
 pub fn embed_wit(
-    wasm_file: &PathBuf,
-    wit_path: &[PathBuf],
-    world: Option<&str>,
+    wasm_file: &Path,
+    paths: &[PathBuf],
+    worlds: &[String],
+    ignore_toml_files: bool,
     features: &[String],
     all_features: bool,
 ) -> Result<()> {
-    let mut wasm = wat::Parser::new().parse_file(wasm_file)?;
-    let (resolve, world_id) = parse_wit(wit_path, world, features, all_features)?;
+    let mut wasm = std::fs::read(wasm_file)?;
+    let (resolve, world_id) = parse_wit(paths, worlds, ignore_toml_files, features, all_features)?;
     wit_component::embed_component_metadata(
         &mut wasm,
         &resolve,
@@ -77,7 +178,7 @@ pub fn module_to_component(wasm_file: &PathBuf) -> Result<()> {
     // In the rare case the snapshot needs to be updated, the latest version
     // can be found here: https://github.com/bytecodealliance/wasmtime/releases
     const WASIP1_SNAPSHOT: &[u8] = include_bytes!("wasi_snapshot_preview1.reactor.wasm");
-    let wasm: Vec<u8> = wat::Parser::new().parse_file(wasm_file)?;
+    let wasm: Vec<u8> = std::fs::read(wasm_file)?;
 
     let mut encoder = wit_component::ComponentEncoder::default().validate(true);
     encoder = encoder.module(&wasm)?;

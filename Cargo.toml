@@ -37,7 +37,8 @@ allow_attributes_without_reason = 'warn'
 anyhow = { workspace = true}
 clap = { version = "4.5.60", features = ["derive"] }
 regex = "1.12.3"
-wat = { version = "1.245.1"}
+serde = { version = "1.0.228", features = ["derive"] }
+toml = "1.1.0"
 wit-bindgen-go = { git = "https://github.com/bytecodealliance/wit-bindgen", rev = "3ee9fe20a5bce398360d5d291e81a4224a6d7c76" }
 wit-component = "0.245.1"
 wit-parser = "0.245.1"
