@@ -83,7 +83,8 @@ pub fn module_to_component(wasm_file: &PathBuf, adapt_file: &Option<PathBuf>) ->
     let mut encoder = wit_component::ComponentEncoder::default().validate(true);
     encoder = encoder.module(&wasm)?;
     let adapt_bytes = if let Some(adapt) = adapt_file {
-        std::fs::read(adapt).with_context(|| format!("failed to read adapt file '{}'", adapt.display()))?
+        std::fs::read(adapt)
+            .with_context(|| format!("failed to read adapt file '{}'", adapt.display()))?
     } else {
         WASIP1_SNAPSHOT_ADAPT.to_vec()
     };
