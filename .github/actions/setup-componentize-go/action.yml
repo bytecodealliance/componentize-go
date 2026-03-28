@@ -1,0 +1,32 @@
+name: 'setup-componentize-go'
+description: 'Setup componentize-go for your Github Actions workflow'
+author: 'James Stockton<james.stocktonj@gmail.com>'
+
+inputs:
+  version:
+    required: false
+    description: 'version of componentize-go to setup'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Cache componentize-go
+      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # 5.0.4
+      with:
+        path: |
+          ${{ runner.tool_cache }}/componentize-go/${{ inputs.version }}
+        key: componentize-go-${{ runner.os }}-${{ runner.arch }}-${{ inputs.version }}
+    - name: Download componentize-go
+      shell: bash
+      run: |
+        bin_name="componentize-go-${{ runner.os }}-${{ runner.arch }}"
+
+        # Download release
+        curl -LO https://github.com/bytecodealliance/componentize-go/releases/download/${{ inputs.version }}/${bin_name}.tar.gz
+        tar -xvzf ${bin_name}.tar.gz
+
+        # Add to cache
+        cache_dir="${{ runner.tool_cache }}/componentize-go/${{ inputs.version }}"
+        mkdir -p "${cache_dir}"
+        cp componentize-go "${cache_dir}"
+        chmod +x  "${cache_dir}/componentize-go"
