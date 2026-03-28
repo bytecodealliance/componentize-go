@@ -80,6 +80,10 @@ pub struct Build {
     /// The path to the Go binary (or look for binary in PATH if `None`).
     #[arg(long)]
     pub go: Option<PathBuf>,
+
+    /// The path to the snapshot adapter to convert a wasip1 module to a component (or use the embedded snapshot if `None`).
+    #[arg(long)]
+    pub adapt: Option<PathBuf>,
 }
 
 #[derive(Parser)]
@@ -109,6 +113,10 @@ pub struct Test {
     /// The path to the Go binary (or look for binary in PATH if `None`).
     #[arg(long)]
     pub go: Option<PathBuf>,
+
+    /// The path to the snapshot adapter to convert a wasip1 module to a component (or use the embedded snapshot if `None`).
+    #[arg(long)]
+    pub adapt: Option<PathBuf>,
 }
 
 #[derive(Parser)]
@@ -162,7 +170,7 @@ fn build(wit_opts: WitOpts, build: Build) -> Result<()> {
         )?;
 
         // Update the wasm module to use the current component model ABI.
-        module_to_component(&module)?;
+        module_to_component(&module, &build.adapt)?;
     }
 
     Ok(())
@@ -188,7 +196,7 @@ fn test(wit_opts: WitOpts, test: Test) -> Result<()> {
             )?;
 
             // Update the wasm module to use the current component model ABI.
-            module_to_component(&module)?;
+            module_to_component(&module, &test.adapt)?;
         }
     }
 

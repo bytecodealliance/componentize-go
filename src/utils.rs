@@ -5,6 +5,10 @@ use std::{
 };
 use wit_parser::{PackageId, Resolve, WorldId};
 
+// In the rare case the snapshot needs to be updated, the latest version
+// can be found here: https://github.com/bytecodealliance/wasmtime/releases
+const WASIP1_SNAPSHOT_ADAPT: &[u8] = include_bytes!("wasi_snapshot_preview1.reactor.wasm");
+
 pub fn parse_wit(
     paths: &[impl AsRef<Path>],
     world: Option<&str>,
@@ -73,15 +77,18 @@ pub fn embed_wit(
 }
 
 /// Update the wasm module to use the current component model ABI.
-pub fn module_to_component(wasm_file: &PathBuf) -> Result<()> {
-    // In the rare case the snapshot needs to be updated, the latest version
-    // can be found here: https://github.com/bytecodealliance/wasmtime/releases
-    const WASIP1_SNAPSHOT: &[u8] = include_bytes!("wasi_snapshot_preview1.reactor.wasm");
+pub fn module_to_component(wasm_file: &PathBuf, adapt_file: &Option<PathBuf>) -> Result<()> {
     let wasm: Vec<u8> = wat::Parser::new().parse_file(wasm_file)?;
 
     let mut encoder = wit_component::ComponentEncoder::default().validate(true);
     encoder = encoder.module(&wasm)?;
-    encoder = encoder.adapter("wasi_snapshot_preview1", WASIP1_SNAPSHOT)?;
+    let adapt_bytes = if let Some(adapt) = adapt_file {
+        std::fs::read(adapt)
+            .with_context(|| format!("failed to read adapt file '{}'", adapt.display()))?
+    } else {
+        WASIP1_SNAPSHOT_ADAPT.to_vec()
+    };
+    encoder = encoder.adapter("wasi_snapshot_preview1", &adapt_bytes)?;
 
     let bytes = encoder
         .encode()
