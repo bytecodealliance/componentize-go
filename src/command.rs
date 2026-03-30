@@ -176,6 +176,15 @@ pub struct Bindings {
     /// default to that value.
     #[arg(long, requires = "pkg_name")]
     pub export_pkg_name: Option<String>,
+
+    /// When generating Go package names, include the WIT package version even
+    /// if only one version of that package is referenced by the specified
+    /// world.
+    ///
+    /// By default, the version will only be included in the name if the world
+    /// references more than one version of the WIT package.
+    #[arg(long)]
+    pub include_versions: bool,
 }
 
 pub fn run<T: Into<OsString> + Clone, I: IntoIterator<Item = T>>(args: I) -> Result<()> {
@@ -268,5 +277,6 @@ fn bindings(wit_opts: WitOpts, bindings: Bindings) -> Result<()> {
         bindings.output.as_deref(),
         bindings.pkg_name,
         bindings.export_pkg_name,
+        bindings.include_versions,
     )
 }
