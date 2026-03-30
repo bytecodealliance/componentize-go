@@ -12,6 +12,7 @@ pub fn generate_bindings(
     output: Option<&Path>,
     pkg_name: Option<String>,
     export_pkg_name: Option<String>,
+    include_versions: bool,
 ) -> Result<()> {
     let mut files = Default::default();
 
@@ -36,6 +37,7 @@ pub fn generate_bindings(
         format,
         pkg_name,
         export_pkg_name,
+        include_versions,
         ..Default::default()
     }
     .build()
