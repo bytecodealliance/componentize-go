@@ -46,9 +46,8 @@ clap = { version = "4.5.60", features = ["derive"] }
 regex = "1.12.3"
 serde = { version = "1.0.228", features = ["derive"] }
 toml = "1.1.0"
-# TODO: Switch back to upstream once
-# https://github.com/bytecodealliance/wit-bindgen/pull/1572 is merged:
-wit-bindgen-go = { git = "https://github.com/dicej/wit-bindgen", rev = "661ade1e" }
+# TODO: Switch to release 0.55.0 when it's available:
+wit-bindgen-go = { git = "https://github.com/bytecodealliance/wit-bindgen", rev = "6a13b247" }
 wit-component = "0.245.1"
 wit-parser = "0.245.1"
 which = "8.0.2"
