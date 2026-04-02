@@ -383,15 +383,15 @@ pub fn pick_go(resolve: &Resolve, world: WorldId, go_path: Option<&Path>) -> Res
     };
 
     if let Some(go) = go {
-        if check_go_version(&go).is_err() {
-            eprintln!(
-                "Note: {} is not a compatible version of Go; will use downloaded version.",
-                go.display()
-            );
-        } else if world_needs_async(resolve, world) && check_go_async_support(&go).is_none() {
+        if world_needs_async(resolve, world) && check_go_async_support(&go).is_none() {
             eprintln!(
                 "Note: {} does not support async operation; will use downloaded version.\n\
                  See https://github.com/golang/go/pull/76775 for details.",
+                go.display()
+            )
+        } else if check_go_version(&go).is_err() {
+            eprintln!(
+                "Note: {} is not a compatible version of Go; will use downloaded version.",
                 go.display()
             );
         } else {
