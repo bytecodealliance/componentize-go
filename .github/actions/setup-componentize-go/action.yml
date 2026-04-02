@@ -1,6 +1,5 @@
 name: 'setup-componentize-go'
 description: 'Setup componentize-go for your Github Actions workflow'
-author: 'James Stockton<james.stocktonj@gmail.com>'
 
 inputs:
   version:
