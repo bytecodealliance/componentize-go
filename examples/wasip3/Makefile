@@ -14,7 +14,7 @@ generate-bindings: install-patched-go
 	go mod tidy
 
 build-component: generate-bindings
-	componentize-go --world wasip3-example componentize --go ../../$(GO)/bin/go
+	componentize-go --world wasip3-example build --go ../../$(GO)/bin/go
 
 .PHONY: run
 run: build-component
