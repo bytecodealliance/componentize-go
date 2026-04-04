@@ -383,7 +383,7 @@ mod tests {
         let mut app = App::new(
             &app_dir,
             &[&app_dir.join("wit")],
-            &["wasi:http/service"],
+            &["wasip3-example"],
             None,
             true,
         );

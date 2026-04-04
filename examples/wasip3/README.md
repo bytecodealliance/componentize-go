@@ -8,16 +8,20 @@ ABI](https://github.com/WebAssembly/component-model/blob/main/design/mvp/Concurr
 
 As of this writing, not everything has been upstreamed and released, so this
 relies on specific Git revisions of certain tools, plus [a patched version of
-Go](https://github.com/dicej/go/releases/tag/go1.25.5-wasi-on-idle).  Once
-everything is merged, we'll be able to switch to the upstream releases.
+Go](https://github.com/dicej/go/releases/tag/go1.25.5-wasi-on-idle). In the
+meantime, if componentize-go detects that a targeted WIT world uses async, it
+will automatically install the patched Go version in then OS's cache directory
+and use it to build components. Once everything is merged, we'll be able to
+switch to the upstream releases.
 
 ## Building and Running
 
 ### Prerequisites
 
-- [**componentize-go**](https://github.com/bytecodealliance/componentize-go) - Latest version
-- [**go**](https://github.com/dicej/go/releases/tag/go1.25.5-wasi-on-idle) - The [Makefile](./Makefile) installs the patched version of Go.
-- [**wasmtime**](https://github.com/bytecodealliance/wasmtime)  - v40.0.2
+- [**componentize-go**](https://github.com/bytecodealliance/componentize-go) - v0.3.0
+- [**wasmtime**](https://github.com/bytecodealliance/wasmtime)  - v43.0.0
+
+### Build and Run
 
 This will build the dependencies, generate Go bindings from the
 `wasi:http@0.3.0-rc-2025-09-16` WIT files, build the component, and run it using
