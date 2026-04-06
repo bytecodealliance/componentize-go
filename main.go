@@ -132,26 +132,8 @@ func maybeDownload(release, binDirectory, versionPath, lockFilePath, binaryPath 
 // stdout and stderr back to the user.
 func run(binaryPath string) {
 	command := exec.Command(binaryPath, os.Args[1:]...)
-
-	stderr, err := command.StderrPipe()
-	if err != nil {
-		log.Fatalf("unable to get stderr for `%v` command: %v", binaryPath, err)
-	}
-
-	go func() {
-		defer stderr.Close()
-		io.Copy(os.Stderr, stderr)
-	}()
-
-	stdout, err := command.StdoutPipe()
-	if err != nil {
-		log.Fatalf("unable to get stdout for `%v` command: %v", binaryPath, err)
-	}
-
-	go func() {
-		defer stdout.Close()
-		io.Copy(os.Stdout, stdout)
-	}()
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
 
 	if err := command.Start(); err != nil {
 		log.Fatalf("unable to start `%v` command: %v", binaryPath, err)
