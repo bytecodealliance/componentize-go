@@ -24,12 +24,7 @@ import (
 // Although `componentize-go` is written in Rust, we can use this wrapper to
 // make it available using e.g. `go install` and/or `go tool`.
 func main() {
-	// This is hard-coded to point to the latest canary release, which is
-	// appropriate for the `main` branch, but should be changed to the tag
-	// name for each tagged release.
-	//
-	// TODO: Can we automate updating this for each release?
-	release := "canary"
+	release := "v0.3.2"
 
 	directories := userdirs.ForApp(
 		"componentize-go",

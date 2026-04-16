@@ -420,7 +420,7 @@ pub fn pick_go(resolve: &Resolve, world: WorldId, go_path: Option<&Path>) -> Res
         bad_arch => panic!("ARCH not supported: {bad_arch}"),
     };
 
-    let cache_dir = &cache_dir.join("componentize-go");
+    let cache_dir = &cache_dir.join("componentize-go").join("v2");
     let name = &format!("go-{os}-{arch}-bootstrap");
     let dir = cache_dir.join(name);
     let bin = dir.join("bin").join("go");
@@ -433,7 +433,7 @@ pub fn pick_go(resolve: &Resolve, world: WorldId, go_path: Option<&Path>) -> Res
 
     if !bin.exists() {
         let url = format!(
-            "https://github.com/dicej/go/releases/download/go1.25.5-wasi-on-idle/{name}.tbz"
+            "https://github.com/dicej/go/releases/download/go1.25.5-wasi-on-idle-v2/{name}.tbz"
         );
 
         eprintln!("Downloading patched Go from {url}.");
