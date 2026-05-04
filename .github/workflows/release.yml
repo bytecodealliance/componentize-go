@@ -21,12 +21,12 @@ jobs:
         include:
           # Linux x86_64
           - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
+            os: ubuntu-22.04
             artifact_name: componentize-go
             asset_name: componentize-go-linux-amd64
           # Linux aarch64
           - target: aarch64-unknown-linux-gnu
-            os: ubuntu-latest
+            os: ubuntu-22.04
             artifact_name: componentize-go
             asset_name: componentize-go-linux-arm64
           # macOS x86_64
