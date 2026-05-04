@@ -24,7 +24,7 @@ import (
 // Although `componentize-go` is written in Rust, we can use this wrapper to
 // make it available using e.g. `go install` and/or `go tool`.
 func main() {
-	release := "v0.3.2"
+	release := "v0.3.3"
 
 	directories := userdirs.ForApp(
 		"componentize-go",
