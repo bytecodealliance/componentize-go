@@ -1,0 +1,3 @@
+examples/sdk/pkg/bindings/imports/** linguist-generated=true
+examples/sdk/pkg/bindings/exports/wit_exports/** linguist-generated=true
+examples/sdk/pkg/wit/deps/** linguist-generated=true

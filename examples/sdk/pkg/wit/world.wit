@@ -1,0 +1,6 @@
+package example:sdk;
+
+world test {
+    include wasi:cli/command@0.3.0-rc-2026-03-15;
+    include wasi:sockets/imports@0.3.0-rc-2026-03-15;
+}

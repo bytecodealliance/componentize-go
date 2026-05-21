@@ -414,4 +414,59 @@ mod tests {
             .expect("app failed to run");
         Ok(())
     }
+
+    // This test is more verbose because it uses unique componentize-go and wasmtime
+    // options that didn't make sense to abstract.
+    #[tokio::test]
+    async fn example_sdk() -> Result<()> {
+        let cwd = env::current_dir()?;
+        let app_dir = cwd
+            .parent()
+            .unwrap()
+            .join("examples")
+            .join("sdk")
+            .join("component");
+
+        // Build component
+        let build_output = Command::new(COMPONENTIZE_GO_PATH.as_path())
+            .arg("build")
+            .current_dir(&app_dir)
+            .output()?;
+        if !build_output.status.success() {
+            return Err(anyhow!(
+                "failed to build application \"{}\": {}",
+                app_dir.display(),
+                String::from_utf8_lossy(&build_output.stderr)
+            ));
+        }
+
+        // Run component
+        let mut child = Command::new("wasmtime")
+            .arg("run")
+            .args(["-S", "p3,inherit-network"])
+            .args(["-W", "component-model-async"])
+            .arg(app_dir.join("main.wasm"))
+            .spawn()?;
+
+        // Send HTTP request to component
+        let start = std::time::Instant::now();
+        loop {
+            match reqwest::get(format!("http://localhost:6767")).await {
+                Ok(r) => {
+                    let actual = r.text().await.expect("Failed to read response");
+                    assert_eq!(&actual, "Hello from Go + wasi:sockets!");
+                    break;
+                }
+                Err(e) => {
+                    if start.elapsed() > Duration::from_secs(5) {
+                        return Err(anyhow!("Unable to reach the app: {e}"));
+                    }
+                }
+            }
+        }
+
+        // Kill running component
+        child.kill()?;
+        Ok(())
+    }
 }

@@ -1,0 +1,2 @@
+worlds = ["example:sdk/test"]
+wit_paths = ["wit"]

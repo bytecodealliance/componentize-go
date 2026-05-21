@@ -1,4 +1,4 @@
-# `wasip1` Example
+# `sdk` example
 
 ## Usage
 
@@ -12,4 +12,7 @@
 
 ```sh
 make run
+
+# Invoke the application
+curl localhost:6767
 ```
