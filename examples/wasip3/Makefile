@@ -3,7 +3,7 @@ generate-bindings:
 	go mod tidy
 
 build-component: generate-bindings
-	componentize-go --world wasip3-example build --go ../../$(GO)/bin/go
+	componentize-go --world wasip3-example build
 
 .PHONY: run
 run: build-component

@@ -7,6 +7,7 @@ use std::{
     io::Cursor,
     path::{Path, PathBuf},
     process::Command,
+    time::Duration,
 };
 use tar::Archive;
 use wit_parser::{
@@ -376,6 +377,77 @@ fn world_needs_async(resolve: &Resolve, world: WorldId) -> bool {
         })
 }
 
+pub fn install_go(
+    url: Option<String>,
+    timeout: Option<Duration>,
+    cache_dir: Option<PathBuf>,
+) -> Result<PathBuf> {
+    // Determine OS and architecture
+    let os = match std::env::consts::OS {
+        "macos" => "darwin",
+        "linux" => "linux",
+        "windows" => "windows",
+        bad_os => panic!("OS not supported: {bad_os}"),
+    };
+
+    // Map to Go's naming conventions
+    let arch = match std::env::consts::ARCH {
+        "aarch64" => "arm64",
+        "x86_64" => "amd64",
+        bad_arch => panic!("ARCH not supported: {bad_arch}"),
+    };
+
+    let cache_dir = &cache_dir.unwrap_or({
+        let Some(cache_dir) = dirs::cache_dir() else {
+            bail!("unable to determine cache directory for current user");
+        };
+        cache_dir.join("componentize-go").join("v2")
+    });
+
+    let name = &format!("go-{os}-{arch}-bootstrap");
+    let dir = cache_dir.join(name);
+    let bin = dir.join("bin").join("go");
+
+    fs::create_dir_all(cache_dir)?;
+
+    // Grab a lock to avoid concurrent downloads
+    let lock_file = File::create(cache_dir.join("lock"))?;
+    lock_file.lock()?;
+
+    if !bin.exists() {
+        let url = url.unwrap_or(format!(
+            "https://github.com/dicej/go/releases/download/go1.25.5-wasi-on-idle-v2/{name}.tbz"
+        ));
+
+        // Provide a generous timeout window for users with slow internet
+        let client = reqwest::blocking::Client::builder()
+            .connect_timeout(Duration::from_secs(15))
+            .timeout(timeout.unwrap_or(Duration::from_mins(10)))
+            .build()?;
+
+        eprintln!("Downloading patched Go from {url}.");
+
+        let content = (|| -> Result<_> {
+            client
+                .get(&url)
+                .send()
+                .with_context(|| format!("failed to connect to {url}"))?
+                .error_for_status()
+                .with_context(|| format!("server returned an error status for {url}"))?
+                .bytes()
+                .with_context(|| format!("download of {url} was interrupted"))
+        })()
+        .context("failed to install patched version of Go\n\nRun `componentize-go install-go` to try again")?;
+
+        eprintln!("Extracting patched Go to {}.", cache_dir.display());
+
+        Archive::new(BzDecoder::new(Cursor::new(content))).unpack(cache_dir)?;
+    }
+
+    let bin: PathBuf = dir.join("bin").join("go");
+    Ok(bin)
+}
+
 pub fn pick_go(resolve: &Resolve, world: WorldId, go_path: Option<&Path>) -> Result<PathBuf> {
     let go = match go_path {
         Some(p) => Some(make_path_absolute(p)?),
@@ -401,54 +473,50 @@ pub fn pick_go(resolve: &Resolve, world: WorldId, go_path: Option<&Path>) -> Res
         eprintln!("Note: `go` command not found; will use downloaded version.");
     }
 
-    let Some(cache_dir) = dirs::cache_dir() else {
-        bail!("unable to determine cache directory for current user");
-    };
-
-    // Determine OS and architecture
-    let os = match std::env::consts::OS {
-        "macos" => "darwin",
-        "linux" => "linux",
-        "windows" => "windows",
-        bad_os => panic!("OS not supported: {bad_os}"),
-    };
-
-    // Map to Go's naming conventions
-    let arch = match std::env::consts::ARCH {
-        "aarch64" => "arm64",
-        "x86_64" => "amd64",
-        bad_arch => panic!("ARCH not supported: {bad_arch}"),
-    };
-
-    let cache_dir = &cache_dir.join("componentize-go").join("v2");
-    let name = &format!("go-{os}-{arch}-bootstrap");
-    let dir = cache_dir.join(name);
-    let bin = dir.join("bin").join("go");
-
-    fs::create_dir_all(cache_dir)?;
-
-    // Grab a lock to avoid concurrent downloads
-    let lock_file = File::create(cache_dir.join("lock"))?;
-    lock_file.lock()?;
-
-    if !bin.exists() {
-        let url = format!(
-            "https://github.com/dicej/go/releases/download/go1.25.5-wasi-on-idle-v2/{name}.tbz"
-        );
-
-        eprintln!("Downloading patched Go from {url}.");
-
-        let content = reqwest::blocking::get(&url)?.error_for_status()?.bytes()?;
-
-        eprintln!("Extracting patched Go to {}.", cache_dir.display());
-
-        Archive::new(BzDecoder::new(Cursor::new(content))).unpack(cache_dir)?;
-    }
-
+    let bin = install_go(None, None, None)?;
     check_go_version(&bin)?;
     check_go_async_support(&bin).ok_or_else(|| anyhow!("downloaded Go does not support async"))?;
 
     eprintln!("Using {}.", bin.display());
 
     Ok(bin)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Read;
+    use std::net::TcpListener;
+    use std::thread;
+    use std::time::Duration;
+
+    #[test]
+    fn test_install_go_times_out_on_stalled_server() {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let addr = listener.local_addr().unwrap();
+
+        // Accept the connection but never write a response
+        thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            let mut buf = [0u8; 1024];
+            // Read the request, then idle for 60s
+            let _ = stream.read(&mut buf);
+            thread::sleep(Duration::from_secs(60));
+        });
+
+        let url = format!("http://{addr}/go.tbz");
+        let result = install_go(
+            Some(url),
+            Some(Duration::from_secs(1)),
+            Some(std::env::temp_dir()),
+        );
+        assert!(result.is_err());
+
+        let err_str = format!("{result:?}");
+
+        // Make sure it's actually a timeout error
+        assert!(err_str.contains("operation timed out"));
+        // Make sure the instruction redirecting the user is present
+        assert!(err_str.contains("Run `componentize-go install-go` to try again"));
+    }
 }

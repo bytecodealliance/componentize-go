@@ -2,7 +2,7 @@ use crate::{
     cmd_bindings::generate_bindings,
     cmd_build::build_module,
     cmd_test::build_test_module,
-    utils::{dummy_wit, embed_wit, module_to_component, parse_wit, pick_go},
+    utils::{dummy_wit, embed_wit, install_go, module_to_component, parse_wit, pick_go},
 };
 use anyhow::{Result, anyhow};
 use clap::{Parser, Subcommand};
@@ -79,6 +79,11 @@ pub enum Command {
 
     /// Generate Go bindings for a WIT world.
     Bindings(Bindings),
+
+    /// Install a patched version of Go that's compatible with component model async.
+    ///
+    /// WARNING: this is a temporary workaround, and will be removed once https://github.com/golang/go/pull/76775 is resolved
+    InstallGo,
 }
 
 #[derive(Parser)]
@@ -195,6 +200,13 @@ pub fn run<T: Into<OsString> + Clone, I: IntoIterator<Item = T>>(args: I) -> Res
         Command::Build(opts) => build(options.wit_opts, opts),
         Command::Bindings(opts) => bindings(options.wit_opts, opts),
         Command::Test(opts) => test(options.wit_opts, opts),
+        Command::InstallGo => {
+            eprintln!(
+                "warning: `install-go` is a temporary workaround, and will be removed once https://github.com/golang/go/pull/76775 is resolved"
+            );
+            let _ = install_go(None, None, None)?;
+            Ok(())
+        }
     }
 }
 
