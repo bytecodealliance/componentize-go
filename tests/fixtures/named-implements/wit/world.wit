@@ -1,0 +1,15 @@
+package foo:baz@0.1.0;
+
+interface store {
+    get: func(key: string) -> string;
+}
+
+world named-implements {
+    // Import the same interface under separate names to exercise named
+    // `implements` imports.
+    import primary: store;
+    import secondary: store;
+    // Ensure a bare import alongside the named ones still works.
+    import store;
+    export run: func();
+}

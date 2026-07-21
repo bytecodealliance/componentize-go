@@ -43,5 +43,6 @@ pub fn engine() -> anyhow::Result<Engine> {
     let mut config = Config::new();
     config.wasm_component_model(true);
     config.wasm_component_model_async(true);
+    config.wasm_component_model_implements(true);
     Engine::new(&config).map_err(|e| anyhow!(e))
 }

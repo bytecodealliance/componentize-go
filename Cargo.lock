@@ -372,7 +372,7 @@ dependencies = [
 
 [[package]]
 name = "componentize-go"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "bzip2",
@@ -386,7 +386,7 @@ dependencies = [
  "which",
  "wit-bindgen-go",
  "wit-component",
- "wit-parser 0.252.0",
+ "wit-parser 0.253.0",
 ]
 
 [[package]]
@@ -2272,7 +2272,7 @@ dependencies = [
 
 [[package]]
 name = "tests"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "bzip2",
@@ -2741,15 +2741,25 @@ dependencies = [
 ]
 
 [[package]]
-name = "wasm-metadata"
-version = "0.252.0"
+name = "wasm-encoder"
+version = "0.253.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b7e08e02a3cd55bf778009d4cd6faae50da011f293644daf78a531a32d6d142"
+checksum = "59972d6cd272259de647b7c1f1912e45e289c75ffd4be04e10695507cd7e1b59"
+dependencies = [
+ "leb128fmt",
+ "wasmparser 0.253.0",
+]
+
+[[package]]
+name = "wasm-metadata"
+version = "0.253.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b3f45816ef616806f48498bcd831377de578c4fa51db0c83ab8ceb78cc13523b"
 dependencies = [
  "anyhow",
  "indexmap",
- "wasm-encoder 0.252.0",
- "wasmparser 0.252.0",
+ "wasm-encoder 0.253.0",
+ "wasmparser 0.253.0",
 ]
 
 [[package]]
@@ -2770,6 +2780,17 @@ name = "wasmparser"
 version = "0.252.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3eb099dcadcde5be9eef55e3a337128efd4e44b4c93122487e4d2e4e1c6627c"
+dependencies = [
+ "bitflags",
+ "indexmap",
+ "semver",
+]
+
+[[package]]
+name = "wasmparser"
+version = "0.253.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "19db11f87d2486580e1e8b6f494c54df7e0566b87d0b599db843c24019667339"
 dependencies = [
  "bitflags",
  "hashbrown 0.17.1",
@@ -3532,22 +3553,22 @@ checksum = "d7249219f66ced02969388cf2bb044a09756a083d0fab1e566056b04d9fbcaa5"
 
 [[package]]
 name = "wit-bindgen-core"
-version = "0.58.0"
-source = "git+https://github.com/bytecodealliance/wit-bindgen?rev=4642b6bcc4283361b5d85eb00b00addf618458a9#4642b6bcc4283361b5d85eb00b00addf618458a9"
+version = "0.59.0"
+source = "git+https://github.com/bytecodealliance/wit-bindgen?rev=50b799afcb886551565cb29c190371026aa55a30#50b799afcb886551565cb29c190371026aa55a30"
 dependencies = [
  "anyhow",
  "heck",
- "wit-parser 0.252.0",
+ "wit-parser 0.253.0",
 ]
 
 [[package]]
 name = "wit-bindgen-go"
-version = "0.58.0"
-source = "git+https://github.com/bytecodealliance/wit-bindgen?rev=4642b6bcc4283361b5d85eb00b00addf618458a9#4642b6bcc4283361b5d85eb00b00addf618458a9"
+version = "0.59.0"
+source = "git+https://github.com/bytecodealliance/wit-bindgen?rev=50b799afcb886551565cb29c190371026aa55a30#50b799afcb886551565cb29c190371026aa55a30"
 dependencies = [
  "anyhow",
  "heck",
- "wasm-encoder 0.252.0",
+ "wasm-encoder 0.253.0",
  "wasm-metadata",
  "wit-bindgen-core",
  "wit-component",
@@ -3555,9 +3576,9 @@ dependencies = [
 
 [[package]]
 name = "wit-component"
-version = "0.252.0"
+version = "0.253.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76db0662b590f45d33d0e363fa13539a5a1eecd35d5a12fe208c335461c1053d"
+checksum = "dbbd2500ac3488489ee8c6e59b79d7e47e6da5bfb019efd35d5dca57b78af624"
 dependencies = [
  "anyhow",
  "bitflags",
@@ -3566,10 +3587,10 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "wasm-encoder 0.252.0",
+ "wasm-encoder 0.253.0",
  "wasm-metadata",
- "wasmparser 0.252.0",
- "wit-parser 0.252.0",
+ "wasmparser 0.253.0",
+ "wit-parser 0.253.0",
 ]
 
 [[package]]
@@ -3593,9 +3614,9 @@ dependencies = [
 
 [[package]]
 name = "wit-parser"
-version = "0.252.0"
+version = "0.253.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4266bea110371c620ccf3201c5023676046bc4556e5c7cfb5d500bda5ebc162d"
+checksum = "4d997b8e5920fcbeec742b58e583325d6419a6aca617ae8075c406a61c65ba8a"
 dependencies = [
  "anyhow",
  "hashbrown 0.17.1",
@@ -3607,7 +3628,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "unicode-ident",
- "wasmparser 0.252.0",
+ "wasmparser 0.253.0",
 ]
 
 [[package]]

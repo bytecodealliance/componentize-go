@@ -29,6 +29,53 @@ async fn fixture_multiple_worlds() -> Result<()> {
 }
 
 #[test]
+fn fixture_named_implements() -> Result<()> {
+    // Build the app with componentize-go
+    let app_dir = app_dir("named-implements")?;
+    let app = App::new(
+        &app_dir,
+        &[&app_dir.join("wit")],
+        &["named-implements"],
+        None,
+        true,
+    );
+    app.build_component().expect("failed to build app");
+
+    // Link the same `store` interface under three import names, each backed
+    // by a distinct host implementation, to verify that named `implements`
+    // imports route to their own instances.
+    let engine = engine()?;
+    let component = Component::from_file(&engine, app_dir.join("main.wasm"))?;
+
+    let mut linker = Linker::<State>::new(&engine);
+    wasmtime_wasi::p2::add_to_linker_sync(&mut linker)?;
+
+    for (import, prefix) in [
+        ("primary", "primary"),
+        ("secondary", "secondary"),
+        ("foo:baz/store@0.1.0", "bare"),
+    ] {
+        linker
+            .instance(import)?
+            .func_wrap("get", move |_store, (key,): (String,)| {
+                Ok((format!("{prefix}:{key}"),))
+            })?;
+    }
+
+    let mut store = Store::new(&engine, State::new());
+    let instance = linker.instantiate(&mut store, &component)?;
+    let run = instance.get_typed_func::<(), ()>(&mut store, "run")?;
+    run.call(&mut store, ())?;
+
+    assert_eq!(
+        store.data().stdout(),
+        b"primary:color\nsecondary:color\nbare:color\n"
+    );
+
+    Ok(())
+}
+
+#[test]
 fn fixture_memory_pressure() -> Result<()> {
     // Build the app with componentize-go
     let app_dir = app_dir("memory-pressure")?;
