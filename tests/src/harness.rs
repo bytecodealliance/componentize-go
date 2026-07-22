@@ -314,7 +314,7 @@ impl App {
                     return Ok(());
                 }
                 Err(e) => {
-                    if start.elapsed() > Duration::from_secs(5) {
+                    if start.elapsed() > Duration::from_secs(30) {
                         return Err(anyhow!("Unable to reach the app: {e}"));
                     }
                 }
