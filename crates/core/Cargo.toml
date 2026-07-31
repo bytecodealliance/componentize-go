@@ -1,0 +1,23 @@
+[package]
+name = "componentize-go-core"
+description = """
+The filesystem- and subprocess-free core of componentize-go: WIT resolution, Go
+bindings generation, WIT metadata embedding, and component encoding. Everything
+here is a pure byte transform, so it compiles to wasm as well as to native.
+"""
+version = { workspace = true }
+edition = { workspace = true }
+
+[lints]
+workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+# Versioned in lockstep with wasmtime; keep aligned with the wasmtime used in
+# `tests/`. The adapter this replaces was checked in at 46 while wasmtime had
+# already moved to 47, so sourcing it here also corrects that drift.
+wasi-preview1-component-adapter-provider = "47"
+wat = "1.253.0"
+wit-bindgen-go = { workspace = true }
+wit-component = { workspace = true }
+wit-parser = { workspace = true }

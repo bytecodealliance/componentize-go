@@ -1,7 +1,37 @@
 use crate::utils::make_path_absolute;
-use anyhow::Result;
-use std::path::{Path, PathBuf};
+use anyhow::{Context, Result};
+use componentize_go_core::BindingsOptions;
+use std::{
+    path::{Path, PathBuf},
+    process::{Command, Stdio},
+};
 use wit_parser::{Resolve, WorldId};
+
+/// Format Go source with `gofmt`, if it is on `PATH`.
+///
+/// Generation itself happens in `componentize-go-core`, which cannot spawn a
+/// process, so formatting is applied here to the emitted bytes instead. That
+/// keeps the native and component code paths producing identical output.
+fn gofmt(path: &Path) -> Result<()> {
+    let file = std::fs::File::open(path)?;
+    let output = match Command::new("gofmt")
+        .stdin(Stdio::from(file))
+        .stderr(Stdio::inherit())
+        .output()
+    {
+        Ok(output) => output,
+        // Not installed: generated code is still valid, just unformatted.
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(e) => return Err(e).context("failed to run `gofmt`"),
+    };
+
+    if output.status.success() {
+        std::fs::write(path, output.stdout)
+            .with_context(|| format!("failed to write '{}'", path.display()))?;
+    }
+
+    Ok(())
+}
 
 #[allow(clippy::too_many_arguments)]
 pub fn generate_bindings(
@@ -14,47 +44,43 @@ pub fn generate_bindings(
     export_pkg_name: Option<String>,
     include_versions: bool,
 ) -> Result<()> {
-    let mut files = Default::default();
-
-    let format = if should_format {
-        wit_bindgen_go::Format::True
-    } else {
-        wit_bindgen_go::Format::False
-    };
-
     // If the user wants to create a package rather than a standalone binary, provide them with the
     // go.bytecodealliance.org/pkg version that needs to be placed in their go.mod file
-    let mut message: Option<String> = None;
-    if pkg_name.is_some() {
-        message = Some(format!(
+    let message = pkg_name.as_ref().map(|_| {
+        format!(
             "Success! Please add the following line to your 'go.mod' file:\n\nrequire {}",
-            wit_bindgen_go::remote_pkg_version()
-        ));
-    }
+            componentize_go_core::remote_pkg_version()
+        )
+    });
 
-    wit_bindgen_go::Opts {
-        generate_stubs,
-        format,
-        pkg_name,
-        export_pkg_name,
-        include_versions,
-        ..Default::default()
-    }
-    .build()
-    .generate(resolve, world, &mut files)?;
+    let files = componentize_go_core::generate_bindings(
+        resolve,
+        world,
+        &BindingsOptions {
+            generate_stubs,
+            pkg_name,
+            export_pkg_name,
+            include_versions,
+        },
+    )?;
 
     let output_path = match output {
         Some(p) => make_path_absolute(p)?,
         None => PathBuf::from("."),
     };
 
-    for (name, contents) in files.iter() {
-        let file_path = output_path.join(name);
+    for file in &files {
+        let file_path = output_path.join(&file.path);
         if let Some(parent) = file_path.parent() {
             std::fs::create_dir_all(parent)?;
         }
 
-        std::fs::write(&file_path, contents)?;
+        std::fs::write(&file_path, &file.contents)
+            .with_context(|| format!("failed to write '{}'", file_path.display()))?;
+
+        if should_format && file.path.ends_with(".go") {
+            gofmt(&file_path)?;
+        }
     }
 
     if let Some(msg) = message {
