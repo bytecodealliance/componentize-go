@@ -9,14 +9,18 @@ name = "componentize_go"
 crate-type = ["cdylib", "rlib"]
 
 [workspace]
-members = ["./tests"]
+members = ["./tests", "crates/core"]
 
 [workspace.dependencies]
 anyhow = "1.0.103"
 bzip2 = "0.6.1"
+componentize-go-core = { path = "crates/core" }
 once_cell = "1.21.3"
 reqwest = { version = "0.13.4", features = ["blocking"] }
 tar = "0.4.46"
+wit-bindgen-go = { git = "https://github.com/bytecodealliance/wit-bindgen", rev = "d3ebba0957500bf3edb200a89e70555545d92f6c" }
+wit-component = "0.254.0"
+wit-parser = "0.254.0"
 
 [workspace.package]
 version = "0.4.1"
@@ -40,14 +44,13 @@ allow_attributes_without_reason = 'warn'
 [dependencies]
 anyhow = { workspace = true }
 bzip2 = { workspace = true }
+componentize-go-core = { workspace = true }
 reqwest = { workspace = true }
 tar = { workspace = true }
 clap = { version = "4.6.1", features = ["derive"] }
 regex = "1.12.4"
 serde = { version = "1.0.228", features = ["derive"] }
 toml = "1.1.0"
-wit-bindgen-go = { git = "https://github.com/bytecodealliance/wit-bindgen", rev = "d3ebba0957500bf3edb200a89e70555545d92f6c" }
-wit-component = "0.254.0"
-wit-parser = "0.254.0"
+wit-parser = { workspace = true }
 which = "8.0.4"
 dirs = "6.0.0"

@@ -1,5 +1,6 @@
 use anyhow::{Context, Result, anyhow, bail};
 use bzip2::read::BzDecoder;
+use componentize_go_core::{File as CoreFile, WitSource};
 use serde::Deserialize;
 use std::{
     collections::BTreeSet,
@@ -11,8 +12,7 @@ use std::{
 };
 use tar::Archive;
 use wit_parser::{
-    CloneMaps, Function, Interface, Package, PackageName, Resolve, Stability, Type, TypeDef,
-    TypeDefKind, World, WorldId, WorldItem,
+    Function, Interface, Resolve, Type, TypeDef, TypeDefKind, World, WorldId, WorldItem,
 };
 
 pub fn dummy_wit() -> (Resolve, WorldId) {
@@ -30,9 +30,62 @@ pub fn dummy_wit() -> (Resolve, WorldId) {
     (resolve, world)
 }
 
-// In the rare case the snapshot needs to be updated, the latest version
-// can be found here: https://github.com/bytecodealliance/wasmtime/releases
-const WASIP1_SNAPSHOT_ADAPT: &[u8] = include_bytes!("wasi_snapshot_preview1.reactor.wasm");
+/// Read one `--wit-path` argument off the filesystem into a [`WitSource`].
+///
+/// Mirrors the layout `wit-parser`'s `push_path` expects: `*.wit` at the root of
+/// a directory form its package, and a `deps` subdirectory holds dependency
+/// packages as directories, single `.wit` files, or `.wasm`/`.wat` encoded
+/// packages. A path to a single file becomes a one-file source.
+fn read_wit_source(path: &Path) -> Result<WitSource> {
+    let mut files = Vec::new();
+
+    if path.is_file() {
+        files.push(CoreFile {
+            path: path
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_else(|| path.display().to_string()),
+            contents: fs::read(path)
+                .with_context(|| format!("failed to read '{}'", path.display()))?,
+        });
+        return Ok(WitSource::new(path.display().to_string(), files));
+    }
+
+    let read_into = |dir: &Path, prefix: &str, files: &mut Vec<CoreFile>| -> Result<()> {
+        for entry in fs::read_dir(dir)
+            .with_context(|| format!("failed to read directory '{}'", dir.display()))?
+        {
+            let entry = entry?;
+            if !entry.file_type()?.is_file() {
+                continue;
+            }
+            let name = entry.file_name().to_string_lossy().into_owned();
+            files.push(CoreFile {
+                path: format!("{prefix}{name}"),
+                contents: fs::read(entry.path())
+                    .with_context(|| format!("failed to read '{}'", entry.path().display()))?,
+            });
+        }
+        Ok(())
+    };
+
+    read_into(path, "", &mut files)?;
+
+    let deps = path.join("deps");
+    if deps.is_dir() {
+        read_into(&deps, "deps/", &mut files)?;
+        for entry in fs::read_dir(&deps)? {
+            let entry = entry?;
+            if !entry.file_type()?.is_dir() {
+                continue;
+            }
+            let name = entry.file_name().to_string_lossy().into_owned();
+            read_into(&entry.path(), &format!("deps/{name}/"), &mut files)?;
+        }
+    }
+
+    Ok(WitSource::new(path.display().to_string(), files))
+}
 
 pub fn parse_wit(
     paths: &[impl AsRef<Path>],
@@ -51,89 +104,12 @@ pub fn parse_wit(
     }
     debug_assert!(!paths.is_empty(), "The paths should not be empty");
 
-    let mut resolve = Resolve {
-        all_features,
-        ..Default::default()
-    };
-    for features in features {
-        for feature in features
-            .split(',')
-            .flat_map(|s| s.split_whitespace())
-            .filter(|f| !f.is_empty())
-        {
-            resolve.features.insert(feature.to_string());
-        }
-    }
-
-    let packages = paths
+    let sources = paths
         .iter()
-        .map(|path| {
-            // Consolidates if the same package is referenced in multiple worlds
-            let mut tmp = Resolve {
-                all_features,
-                features: resolve.features.clone(),
-                ..Default::default()
-            };
-            let (pkg, _files) = tmp.push_path(path)?;
-            let consolidated = resolve.merge(tmp)?;
-            Ok(consolidated.packages[pkg.index()])
-        })
+        .map(|path| read_wit_source(path.as_ref()))
         .collect::<Result<Vec<_>>>()?;
 
-    let worlds = worlds
-        .iter()
-        .map(|world| {
-            packages
-                .iter()
-                .find_map(|&pkg| resolve.select_world(&[pkg], Some(world)).ok())
-                .ok_or_else(|| {
-                    anyhow!("no world named `{world}` found in any of the loaded WIT packages")
-                })
-        })
-        .collect::<Result<Vec<_>>>()?;
-
-    let world = match &worlds[..] {
-        [] => packages
-            .iter()
-            .find_map(|&pkg| resolve.select_world(&[pkg], None).ok())
-            .ok_or_else(|| anyhow!("no default world found in any of the loaded WIT packages"))?,
-        &[world] => world,
-        worlds => {
-            let union_package = resolve.packages.alloc(Package {
-                name: PackageName {
-                    namespace: "componentize-go".into(),
-                    name: "union".into(),
-                    version: None,
-                },
-                docs: Default::default(),
-                interfaces: Default::default(),
-                worlds: Default::default(),
-            });
-
-            let union_world = resolve.worlds.alloc(World {
-                name: "union".into(),
-                imports: Default::default(),
-                exports: Default::default(),
-                package: Some(union_package),
-                docs: Default::default(),
-                stability: Stability::Unknown,
-                includes: Default::default(),
-                span: Default::default(),
-            });
-
-            resolve.packages[union_package]
-                .worlds
-                .insert("union".into(), union_world);
-
-            for &world in worlds {
-                resolve.merge_worlds(world, union_world, &mut CloneMaps::default())?;
-            }
-
-            union_world
-        }
-    };
-
-    Ok((resolve, world))
+    componentize_go_core::resolve_wit(&sources, worlds, features, all_features)
 }
 
 /// Unless `ignore_toml_files` is `true`, use `go list` to search the current
@@ -198,13 +174,8 @@ pub fn make_path_absolute(p: &Path) -> Result<PathBuf> {
 }
 
 pub fn embed_wit(wasm_file: &Path, resolve: &Resolve, world: WorldId) -> Result<()> {
-    let mut wasm = fs::read(wasm_file)?;
-    wit_component::embed_component_metadata(
-        &mut wasm,
-        resolve,
-        world,
-        wit_component::StringEncoding::UTF8,
-    )?;
+    let wasm = fs::read(wasm_file)?;
+    let wasm = componentize_go_core::embed_wit(&wasm, resolve, world)?;
     fs::write(wasm_file, wasm).context(format!("failed to write '{}'", wasm_file.display()))?;
     Ok(())
 }
@@ -213,19 +184,14 @@ pub fn embed_wit(wasm_file: &Path, resolve: &Resolve, world: WorldId) -> Result<
 pub fn module_to_component(wasm_file: &Path, adapt_file: Option<&Path>) -> Result<()> {
     let wasm: Vec<u8> = fs::read(wasm_file)?;
 
-    let mut encoder = wit_component::ComponentEncoder::default().validate(true);
-    encoder = encoder.module(&wasm)?;
-    let adapt_bytes = if let Some(adapt) = adapt_file {
-        fs::read(adapt)
-            .with_context(|| format!("failed to read adapt file '{}'", adapt.display()))?
-    } else {
-        WASIP1_SNAPSHOT_ADAPT.to_vec()
-    };
-    encoder = encoder.adapter("wasi_snapshot_preview1", &adapt_bytes)?;
+    let adapt_bytes = adapt_file
+        .map(|adapt| {
+            fs::read(adapt)
+                .with_context(|| format!("failed to read adapt file '{}'", adapt.display()))
+        })
+        .transpose()?;
 
-    let bytes = encoder
-        .encode()
-        .context("failed to encode component from module")?;
+    let bytes = componentize_go_core::module_to_component(&wasm, adapt_bytes.as_deref())?;
 
     fs::write(wasm_file, bytes).context(format!("failed to write `{}`", wasm_file.display()))?;
 
