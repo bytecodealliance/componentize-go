@@ -8,7 +8,7 @@ ABI](https://github.com/WebAssembly/component-model/blob/main/design/mvp/Concurr
 
 As of this writing, not everything has been upstreamed and released, so this
 relies on specific Git revisions of certain tools, plus [a patched version of
-Go](https://github.com/dicej/go/releases/tag/go1.25.5-wasi-on-idle). In the
+Go](https://github.com/dicej/go/releases/tag/go1.27.1-wasi-on-idle). In the
 meantime, if componentize-go detects that a targeted WIT world uses async, it
 will automatically install the patched Go version in then OS's cache directory
 and use it to build components. Once everything is merged, we'll be able to

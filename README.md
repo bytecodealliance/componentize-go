@@ -24,7 +24,7 @@ The output is a component which may be run using e.g. [`wasmtime`](https://githu
 
 ### Using Go
 
-Requires Go 1.25.5+
+Requires Go 1.27.1+
 
 Add the following to your `go.mod` file and run `go mod tidy`:
 

@@ -478,7 +478,7 @@ pub fn install_go(
 
     if !bin.exists() {
         let url = url.unwrap_or(format!(
-            "https://github.com/dicej/go/releases/download/go1.25.5-wasi-on-idle-v2/{name}.tbz"
+            "https://github.com/dicej/go/releases/download/go1.27.1-wasi-on-idle-v2/{name}.tbz"
         ));
 
         // Provide a generous timeout window for users with slow internet
