@@ -96,7 +96,7 @@ fn fixture_memory_pressure() -> Result<()> {
 
     impl MemoryPressureImports for State {
         fn get_str(&mut self) -> String {
-            String::from("Hello!")
+            "x".repeat(65536)
         }
     }
 
@@ -110,15 +110,9 @@ fn fixture_memory_pressure() -> Result<()> {
     let mut store = Store::new(&engine, State::new());
     let tests = MemoryPressure::instantiate(&mut store, &component, &linker)?;
 
-    // Run component a generous number of times to make sure nothing panics
-    let num_invocations = 10_000;
-    for _ in 0..num_invocations {
-        tests.call_run(&mut store)?;
-    }
-    assert_eq!(
-        store.data().stdout(),
-        b"Hello!\n".repeat(num_invocations).as_slice()
-    );
+    // The guest performs a finite allocation loop and asserts that GC ran.
+    tests.call_run(&mut store)?;
+    assert_eq!(store.data().stdout(), b"ok\n");
 
     Ok(())
 }
