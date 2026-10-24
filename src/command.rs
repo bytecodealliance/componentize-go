@@ -6,7 +6,7 @@ use crate::{
         dummy_wit, embed_wit, install_go, module_to_component, parse_wit, pick_go, world_build_tags,
     },
 };
-use anyhow::{Result, anyhow};
+use anyhow::{Result, bail};
 use clap::{Parser, Subcommand};
 use std::{ffi::OsString, path::PathBuf};
 
@@ -264,7 +264,7 @@ fn test(wit_opts: WitOpts, test: Test) -> Result<()> {
     let go = &pick_go(&resolve, world, test.go.as_deref(), wit_opts.quiet)?;
 
     if test.pkg.is_empty() {
-        return Err(anyhow!("Path to a package containing Go tests is required"));
+        bail!("Path to a package containing Go tests is required");
     }
 
     // Build tags derived from the target world (none for plain wasip1

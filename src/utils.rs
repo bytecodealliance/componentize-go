@@ -1,5 +1,6 @@
 use anyhow::{Context, Result, anyhow, bail};
 use bzip2::read::BzDecoder;
+use semver::{BuildMetadata, Prerelease, Version};
 use serde::Deserialize;
 use std::{
     collections::BTreeSet,
@@ -33,6 +34,14 @@ pub fn dummy_wit() -> (Resolve, WorldId) {
 // In the rare case the snapshot needs to be updated, the latest version
 // can be found here: https://github.com/bytecodealliance/wasmtime/releases
 const WASIP1_SNAPSHOT_ADAPT: &[u8] = include_bytes!("wasi_snapshot_preview1.reactor.wasm");
+
+const PATCHED_GO_VERSION: Version = Version {
+    major: 1,
+    minor: 27,
+    patch: 1,
+    pre: Prerelease::EMPTY,
+    build: BuildMetadata::EMPTY,
+};
 
 pub fn parse_wit(
     paths: &[impl AsRef<Path>],
@@ -239,40 +248,40 @@ pub fn check_go_version(go_path: &Path) -> Result<()> {
     let output = Command::new(go_path).arg("version").output()?;
 
     if !output.status.success() {
-        return Err(anyhow!(
+        bail!(
             "'go version' command failed: {}",
             String::from_utf8_lossy(&output.stderr)
-        ));
+        );
     }
 
     let version_string = String::from_utf8(output.stdout)?;
-    let version_regex = regex::Regex::new(r"go(\d+)\.(\d+)\.(\d+)").unwrap();
-    let semver = version_regex.captures(&version_string).map(|caps| {
-        (
-            caps[1].parse::<u32>().unwrap(), // Major
-            caps[2].parse::<u32>().unwrap(), // Minor
-            caps[3].parse::<u32>().unwrap(), // Patch
+    let semver = parse_go_version(&version_string)?;
+    if !semver.ge(&PATCHED_GO_VERSION) {
+        bail!(
+            "Go version is not valid. Expected '^{PATCHED_GO_VERSION}', found '{}.{}.{}'",
+            semver.major,
+            semver.minor,
+            semver.patch,
         )
-    });
-
-    if let Some((major, minor, patch)) = semver {
-        // TODO: there might be a patch number correlated with wasip3.
-        if major == 1 && minor >= 25 {
-            Ok(())
-        } else {
-            Err(anyhow!(
-                "Go version is not valid. Expected '^1.25.0', found '{}.{}.{}'",
-                major,
-                minor,
-                patch
-            ))
-        }
-    } else {
-        Err(anyhow!(
-            "Failed to parse Go version from: {}",
-            version_string
-        ))
     }
+
+    Ok(())
+}
+
+fn parse_go_version(version_str: &str) -> Result<Version> {
+    let version_regex = regex::Regex::new(r"go(\d+)\.(\d+)\.(\d+)").unwrap();
+    let semver = version_regex
+        .captures(version_str)
+        .map(|caps| Version {
+            major: caps[1].parse::<u64>().unwrap(),
+            minor: caps[2].parse::<u64>().unwrap(),
+            patch: caps[3].parse::<u64>().unwrap(),
+            pre: Prerelease::EMPTY,
+            build: BuildMetadata::EMPTY,
+        })
+        .ok_or(anyhow!("Failed to parse Go version from: {version_str}"))?;
+
+    Ok(semver)
 }
 
 // go_root() returns `None` if the `go` binary cannot be executed or does not return a valid `GOROOT`.
@@ -454,6 +463,14 @@ fn goflags_tags(goflags: &str) -> Vec<String> {
     tags
 }
 
+/// Returns true if a patched Go matching `PATCHED_GO_VERSION` is already installed in `dir`.
+fn patched_go_is_current(dir: &Path) -> bool {
+    fs::read_to_string(dir.join("VERSION"))
+        .ok()
+        .and_then(|v| parse_go_version(&v).ok())
+        .is_some_and(|installed| installed == PATCHED_GO_VERSION)
+}
+
 pub fn install_go(
     url: Option<String>,
     timeout: Option<Duration>,
@@ -492,9 +509,16 @@ pub fn install_go(
     let lock_file = File::create(cache_dir.join("lock"))?;
     lock_file.lock()?;
 
+    if bin.exists() && !patched_go_is_current(&dir) {
+        if !quiet {
+            eprintln!("Removing outdated patched Go at {}.", dir.display());
+        }
+        std::fs::remove_dir_all(dir)?;
+    }
+
     if !bin.exists() {
         let url = url.unwrap_or(format!(
-            "https://github.com/dicej/go/releases/download/go1.27.1-wasi-on-idle/{name}.tbz"
+            "https://github.com/dicej/go/releases/download/go{PATCHED_GO_VERSION}-wasi-on-idle/{name}.tbz"
         ));
 
         // Provide a generous timeout window for users with slow internet
@@ -525,7 +549,6 @@ pub fn install_go(
         Archive::new(BzDecoder::new(Cursor::new(content))).unpack(cache_dir)?;
     }
 
-    let bin: PathBuf = dir.join("bin").join("go");
     Ok(bin)
 }
 
@@ -678,6 +701,8 @@ mod tests {
         assert!(result.is_err());
 
         let err_str = format!("{result:?}");
+
+        println!("{err_str}");
 
         // Make sure it's actually a timeout error
         assert!(err_str.contains("operation timed out"));
