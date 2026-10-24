@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::{Result, bail};
 use once_cell::sync::Lazy;
 use std::{
     net::TcpListener,
@@ -106,11 +106,11 @@ impl App {
         ));
 
         if !test_output.status.success() {
-            return Err(anyhow!(
+            bail!(
                 "failed to build application \"{}\": {}",
                 self.path.display(),
                 String::from_utf8_lossy(&test_output.stderr)
-            ));
+            );
         }
 
         Ok(())
@@ -123,11 +123,11 @@ impl App {
             .output()?;
 
         if !output.status.success() {
-            return Err(anyhow!(
+            bail!(
                 "Failed to run wasm module for application at '{}':\n{} ",
                 &self.wasm_path,
                 String::from_utf8_lossy(&output.stdout)
-            ));
+            );
         }
 
         Ok(())
@@ -170,12 +170,10 @@ impl App {
                     &test_errors.join("\n\n====================\n"),
                     "\n\n====================\n"
                 );
-                return Err(anyhow!(err_msg));
+                bail!(err_msg);
             }
         } else {
-            return Err(anyhow!(
-                "Please include the test_pkg_paths when creating App::new()"
-            ));
+            bail!("Please include the test_pkg_paths when creating App::new()");
         }
 
         Ok(())
@@ -198,11 +196,11 @@ impl App {
         ));
 
         if !build_output.status.success() {
-            return Err(anyhow!(
+            bail!(
                 "failed to build application \"{}\": {}",
                 self.path.display(),
                 String::from_utf8_lossy(&build_output.stderr)
-            ));
+            );
         }
 
         Ok(())
@@ -230,11 +228,11 @@ impl App {
         ));
 
         if !build_output.status.success() {
-            return Err(anyhow!(
+            bail!(
                 "failed to build application \"{}\": {}",
                 self.path.display(),
                 String::from_utf8_lossy(&build_output.stderr)
-            ));
+            );
         }
 
         Ok(())
@@ -260,10 +258,7 @@ impl App {
                 self.path.display()
             ));
         if !bindings_output.status.success() {
-            return Err(anyhow!(
-                "{}",
-                String::from_utf8_lossy(&bindings_output.stderr)
-            ));
+            bail!("{}", String::from_utf8_lossy(&bindings_output.stderr));
         }
 
         // Tidy Go mod
@@ -274,7 +269,7 @@ impl App {
             .output()
             .expect("failed to tidy Go mod");
         if !tidy_output.status.success() {
-            return Err(anyhow!("{}", String::from_utf8_lossy(&tidy_output.stderr)));
+            bail!("{}", String::from_utf8_lossy(&tidy_output.stderr));
         }
 
         Ok(())
@@ -315,7 +310,7 @@ impl App {
                 }
                 Err(e) => {
                     if start.elapsed() > Duration::from_secs(30) {
-                        return Err(anyhow!("Unable to reach the app: {e}"));
+                        bail!("Unable to reach the app: {e}");
                     }
                 }
             }

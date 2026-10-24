@@ -1,5 +1,5 @@
 use crate::utils::{check_go_version, go_tags_arg, make_path_absolute};
-use anyhow::{Result, anyhow};
+use anyhow::{Result, bail};
 use std::{
     path::{Path, PathBuf},
     process::Command,
@@ -78,10 +78,10 @@ pub fn build_test_module(
         .output()?;
 
     if !output.status.success() {
-        return Err(anyhow!(
+        bail!(
             "'go test -c' command failed: {}",
             String::from_utf8_lossy(&output.stderr)
-        ));
+        )
     }
 
     Ok(test_wasm_path)

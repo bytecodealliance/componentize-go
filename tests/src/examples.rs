@@ -1,5 +1,5 @@
 use crate::harness::{App, COMPONENTIZE_GO_PATH, Test};
-use anyhow::{Result, anyhow};
+use anyhow::{Result, bail};
 use std::{env, path::Path, process::Command, time::Duration};
 
 #[test]
@@ -80,11 +80,11 @@ async fn example_sdk() -> Result<()> {
         .current_dir(&app_dir)
         .output()?;
     if !build_output.status.success() {
-        return Err(anyhow!(
+        bail!(
             "failed to build application \"{}\": {}",
             app_dir.display(),
             String::from_utf8_lossy(&build_output.stderr)
-        ));
+        );
     }
 
     // Run component
@@ -106,7 +106,7 @@ async fn example_sdk() -> Result<()> {
             }
             Err(e) => {
                 if start.elapsed() > Duration::from_secs(30) {
-                    return Err(anyhow!("Unable to reach the app: {e}"));
+                    bail!("Unable to reach the app: {e}");
                 }
             }
         }
