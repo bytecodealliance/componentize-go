@@ -19,7 +19,7 @@ reqwest = { version = "0.13.4", features = ["blocking"] }
 tar = "0.4.46"
 
 [workspace.package]
-version = "0.5.2"
+version = "0.5.3"
 edition = "2024"
 
 [workspace.lints.clippy]
@@ -46,9 +46,10 @@ clap = { version = "4.6.1", features = ["derive"] }
 regex = "1.12.4"
 serde = { version = "1.0.228", features = ["derive"] }
 toml = "1.1.0"
-wit-bindgen-go = { git = "https://github.com/bytecodealliance/wit-bindgen", rev = "4f7496b180e4c0eaf787b0bc5ef4a3ac5c68151a" }
+wit-bindgen-go = { git = "https://github.com/bytecodealliance/wit-bindgen", rev = "4a6406d2523716cf0a8b37da1ac2ce68b14d21ee" }
 wit-component = "0.262.0"
 wit-parser = "0.262.0"
 which = "8.0.4"
 dirs = "6.0.0"
 semver = "1.0.28"
+
