@@ -6,4 +6,4 @@ replace pkg => ../pkg
 
 require pkg v0.0.0-00010101000000-000000000000
 
-require go.bytecodealliance.org/pkg v0.4.0 // indirect
+require go.bytecodealliance.org/pkg v0.4.1 // indirect

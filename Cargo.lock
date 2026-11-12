@@ -313,7 +313,7 @@ dependencies = [
 
 [[package]]
 name = "componentize-go"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "anyhow",
  "bzip2",
@@ -2196,7 +2196,7 @@ dependencies = [
 
 [[package]]
 name = "tests"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "anyhow",
  "bzip2",
