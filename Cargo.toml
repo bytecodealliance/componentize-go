@@ -19,7 +19,7 @@ reqwest = { version = "0.13.4", features = ["blocking"] }
 tar = "0.4.46"
 
 [workspace.package]
-version = "0.5.3"
+version = "0.5.4"
 edition = "2024"
 
 [workspace.lints.clippy]
